@@ -27,7 +27,7 @@ nav{
     align-items: center;
 }
 .nav a{transition: .3s;}
-.nav a:hover{color: #00bfff;
+.nav a:hover{color: cyan;
 transform: translateY(-2px);}                                                                                                                                                                                                                                                                                                                                 
 
 .Menu{
@@ -42,7 +42,7 @@ transform: translateY(-2px);}
 }
 
 .Menu a:hover{
-color: lightblue;
+color: cyan;
 }
 
 .hero{
@@ -118,7 +118,7 @@ margin-top: 20px;}
     font-size: 16px;
     display: inline-block;
     text-decoration: none;
-    color: blue;
+    color: cyan;
     font-weight: bold;
     transition: 0.3s;
 }
@@ -148,3 +148,86 @@ footer{color: white;
 text-align: center;
 padding: 20px 0;
 margin-top: 40px;}
+
+.about{padding: 120px 100px;
+}
+
+.about h2{
+    margin-bottom:20px;
+    line-height: 1;
+}
+
+.about-container{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 100px;
+}
+
+.about-text{flex: 1;
+    text-align: justify;
+    font-size: 20px;
+    margin-top: 0;
+    margin-bottom: 20px;
+    line-height: 1.8;
+}
+
+.about-image{
+    flex: 1;
+    text-align: center;
+}
+   
+.about-image img{
+    width: 550px;
+    border-radius: 10px;
+}
+
+.projects{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 auto;
+    padding: 60px 80px 100px 80px;
+}
+
+.projects h2{font-size: 36px;
+    margin-bottom: 40px;
+    color: #ffffff;
+    display: inline-block;
+    padding-bottom: 5px;}
+
+    .projects-container{
+        display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    }
+
+    .projects-card h3{font-size: 20px;}
+    .projects-card   p{font-size: 20px;}
+
+    .projects-card a{
+        padding: 12px 28px;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 16px;
+    display: inline-block;
+    text-decoration: none;
+    color: cyan;
+    font-weight: bold;
+    transition: 0.3s;
+    text-decoration: underline;
+    }
+
+    .projects-card {
+    background: #1e1e1e;
+    padding: 30px;
+    border-radius: 12px;
+    border: 1px solid #333;
+    transition: all 0.3s ease;
+}
+
+.projects-card:hover {
+    transform: translateY(-8px);
+    border-color: #00bfff;
+    box-shadow: 0 8px 20px rgba(0, 191, 255, 0.15);
