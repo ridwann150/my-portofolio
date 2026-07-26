@@ -8,7 +8,7 @@ html{scroll-behavior: smooth;}
 
 body{
     background-color:#111;color:white;
-font-family: arial,sans-serif, Arial, Helvetica;
+font-family:sans-serif, Arial, Helvetica;
 }
 
 header{
@@ -26,8 +26,8 @@ nav{
     justify-content: space-between;
     align-items: center;
 }
-.nav a{transition: .3s;}
-.nav a:hover{color: cyan;
+nav a{transition: .3s;}
+nav a:hover{color: cyan;
 transform: translateY(-2px);}                                                                                                                                                                                                                                                                                                                                 
 
 .Menu{
@@ -78,10 +78,11 @@ border-radius:15px ;
 transition: all 0.4s ease;  
 cursor: pointer;
 }
-.hero-center :hover{transform: scale(1.05);
+.hero-center img:hover{transform: scale(1.05);
 filter: brightness(1.1);}
 
-.about{margin-bottom: 40px;}
+.about{margin-bottom: 40px;
+scroll-maargin-top  90px}
 .work{margin-bottom: 40px;
 margin-top: 20px;}
 
@@ -128,6 +129,7 @@ margin-top: 20px;}
     flex-direction: column;
     gap: 15px;
     margin-top: 20px;
+    scroll-margin-top: 100px;
 }
 .contact i{margin-right: 15px;
 font-size: 24px;}
@@ -182,15 +184,16 @@ margin-top: 40px;}
     border-radius: 10px;
 }
 
-.projects{
+#projects{
     display: flex;
     align-items: center;
+    scroll-margin-top: 90px;
     justify-content: space-between;
     margin: 0 auto;
     padding: 60px 80px 100px 80px;
 }
 
-.projects h2{font-size: 36px;
+#projects h2{font-size: 36px;
     margin-bottom: 40px;
     color: #ffffff;
     display: inline-block;
@@ -212,7 +215,6 @@ margin-top: 40px;}
     cursor: pointer;
     font-size: 16px;
     display: inline-block;
-    text-decoration: none;
     color: cyan;
     font-weight: bold;
     transition: 0.3s;
