@@ -23,7 +23,7 @@ const DEFAULT_PROJECTS = [
         title: "Portfolio Website",
         description:
             "My personal developer portfolio built with semantic HTML5, modern CSS 3 layout, and responsive design concepts.",
-        link: "semantic.html#home",
+        link: "index.html#home",
         images: []
     }
 ];
