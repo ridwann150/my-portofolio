@@ -1,0 +1,665 @@
+console.log("Hello Ridwan! JavaScript connected successfully.");
+
+const AUTH_KEY = "portfolio_logged_in";
+const PROJECTS_KEY = "portfolio_projects";
+const PROJECTS_LANG_KEY = "portfolio_projects_lang_v2";
+const user = { username: "admin", password: "ulatair69@" };
+
+function isLoggedIn() {
+    return localStorage.getItem(AUTH_KEY) === "true";
+}
+
+function setLoggedIn(value) {
+    if (value) {
+        localStorage.setItem(AUTH_KEY, "true");
+    } else {
+        localStorage.removeItem(AUTH_KEY);
+    }
+}
+
+const DEFAULT_PROJECTS = [
+    {
+        id: 1,
+        title: "Portfolio Website",
+        description:
+            "My personal developer portfolio built with semantic HTML5, modern CSS 3 layout, and responsive design concepts.",
+        link: "semantic.html#home",
+        images: []
+    }
+];
+
+function migrateProjectsToEnglish(projects) {
+    if (localStorage.getItem(PROJECTS_LANG_KEY) === "done") {
+        return projects;
+    }
+
+    const map = [
+        {
+            matchTitle: /portofolio/i,
+            title: "Portfolio Website",
+            description:
+                "My personal developer portfolio built with semantic HTML5, modern CSS 3 layout, and responsive design concepts."
+        },
+        {
+            matchTitle: /website e-?commerce|e-?commerce/i,
+            title: "E-Commerce Website",
+            description:
+                "A modern e-commerce website with product catalog, shopping cart, and responsive design for all devices."
+        },
+        {
+            matchTitle: /landing page/i,
+            title: "Landing Page",
+            description:
+                "A clean and conversion-focused landing page built with semantic HTML and modern CSS."
+        },
+        {
+            matchTitle: /blog/i,
+            title: "Blog Website",
+            description:
+                "A blog website with article listing, detail pages, and a clean reading experience."
+        },
+        {
+            matchTitle: /dashboard/i,
+            title: "Admin Dashboard",
+            description:
+                "An admin dashboard for managing data with a clear layout and responsive interface."
+        }
+    ];
+
+    const updated = projects.map(function (project) {
+        const title = project.title || "";
+        const description = project.description || "";
+        const hasIndonesian =
+            /\b(proyek|deskripsi|saya|dengan|untuk|yang|adalah|sebuah|dibangun|menggunakan|portofolio)\b/i.test(
+                title + " " + description
+            ) || /portofolio/i.test(title);
+
+        let p = { ...project };
+
+        if (!p.images) {
+            p.images = p.image ? [p.image] : [];
+            delete p.image;
+        }
+
+        if (!hasIndonesian) return p;
+
+        for (let i = 0; i < map.length; i++) {
+            if (map[i].matchTitle.test(title)) {
+                return { ...p, title: map[i].title, description: map[i].description };
+            }
+        }
+
+        return {
+            ...p,
+            title: title
+                .replace(/Portofolio/gi, "Portfolio")
+                .replace(/Proyek/gi, "Project"),
+            description: description
+                .replace(/Portofolio/gi, "Portfolio")
+                .replace(/proyek/gi, "project")
+                .replace(/dibangun dengan/gi, "built with")
+                .replace(/menggunakan/gi, "using")
+                .replace(/dan/gi, "and")
+                .replace(/untuk/gi, "for")
+                .replace(/yang/gi, "that")
+                .replace(/sebuah/gi, "a")
+                .replace(/adalah/gi, "is")
+                .replace(/saya/gi, "my")
+        };
+    });
+
+    saveProjects(updated);
+    localStorage.setItem(PROJECTS_LANG_KEY, "done");
+    return updated;
+}
+
+function getProjects() {
+    try {
+        const raw = localStorage.getItem(PROJECTS_KEY);
+        if (raw === null) {
+            saveProjects(DEFAULT_PROJECTS);
+            localStorage.setItem(PROJECTS_LANG_KEY, "done");
+            return DEFAULT_PROJECTS.slice();
+        }
+        const parsed = JSON.parse(raw) || [];
+        return migrateProjectsToEnglish(parsed);
+    } catch {
+        return DEFAULT_PROJECTS.slice();
+    }
+}
+
+function saveProjects(projects) {
+    localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects));
+}
+
+function getAllProjects() {
+    return getProjects().slice().sort(function (a, b) {
+        return Number(b.id) - Number(a.id);
+    });
+}
+
+function escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text == null ? "" : String(text);
+    return div.innerHTML;
+}
+
+// ─── Carousel Lightbox ────────────────────────────────────────────────────────
+
+let _lbImages = [];
+let _lbIndex = 0;
+
+function openLightbox(images, startIndex, caption) {
+    const lightbox = document.getElementById("imageLightbox");
+    if (!lightbox || !images || images.length === 0) return;
+
+    _lbImages = images;
+    _lbIndex = startIndex || 0;
+    _renderLightboxSlide(caption || "");
+
+    lightbox.hidden = false;
+    document.body.style.overflow = "hidden";
+
+    const prevBtn = document.getElementById("lightboxPrev");
+    const nextBtn = document.getElementById("lightboxNext");
+    if (prevBtn) prevBtn.style.display = images.length > 1 ? "" : "none";
+    if (nextBtn) nextBtn.style.display = images.length > 1 ? "" : "none";
+}
+
+function _renderLightboxSlide(caption) {
+    const img = document.getElementById("lightboxImage");
+    const captionEl = document.getElementById("lightboxCaption");
+    if (!img) return;
+
+    img.src = _lbImages[_lbIndex];
+    img.alt = caption || "Project image";
+
+    if (captionEl) {
+        const count = _lbImages.length > 1
+            ? " (" + (_lbIndex + 1) + " / " + _lbImages.length + ")"
+            : "";
+        captionEl.textContent = (caption || "") + count;
+    }
+}
+
+function lightboxPrev() {
+    if (_lbImages.length <= 1) return;
+    _lbIndex = (_lbIndex - 1 + _lbImages.length) % _lbImages.length;
+    const captionEl = document.getElementById("lightboxCaption");
+    const currentText = captionEl ? captionEl.textContent.replace(/ \(\d+ \/ \d+\)$/, "") : "";
+    _renderLightboxSlide(currentText);
+}
+
+function lightboxNext() {
+    if (_lbImages.length <= 1) return;
+    _lbIndex = (_lbIndex + 1) % _lbImages.length;
+    const captionEl = document.getElementById("lightboxCaption");
+    const currentText = captionEl ? captionEl.textContent.replace(/ \(\d+ \/ \d+\)$/, "") : "";
+    _renderLightboxSlide(currentText);
+}
+
+function closeLightbox() {
+    const lightbox = document.getElementById("imageLightbox");
+    const img = document.getElementById("lightboxImage");
+    if (!lightbox) return;
+    lightbox.hidden = true;
+    if (img) img.src = "";
+    _lbImages = [];
+    _lbIndex = 0;
+    document.body.style.overflow = "";
+}
+
+function initLightbox() {
+    const lightbox = document.getElementById("imageLightbox");
+    if (!lightbox) return;
+
+    const closeBtn = document.getElementById("lightboxClose");
+    const prevBtn = document.getElementById("lightboxPrev");
+    const nextBtn = document.getElementById("lightboxNext");
+
+    if (closeBtn) closeBtn.addEventListener("click", closeLightbox);
+    if (prevBtn) prevBtn.addEventListener("click", lightboxPrev);
+    if (nextBtn) nextBtn.addEventListener("click", lightboxNext);
+
+    lightbox.addEventListener("click", function (e) {
+        if (e.target === lightbox) closeLightbox();
+    });
+
+    document.addEventListener("keydown", function (e) {
+        if (lightbox.hidden) return;
+        if (e.key === "Escape") closeLightbox();
+        if (e.key === "ArrowLeft") lightboxPrev();
+        if (e.key === "ArrowRight") lightboxNext();
+    });
+
+    let touchStartX = 0;
+    lightbox.addEventListener("touchstart", function (e) {
+        touchStartX = e.touches[0].clientX;
+    }, { passive: true });
+    lightbox.addEventListener("touchend", function (e) {
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(dx) > 50) {
+            if (dx < 0) lightboxNext();
+            else lightboxPrev();
+        }
+    }, { passive: true });
+}
+
+initLightbox();
+
+// ─── Hero photo ───────────────────────────────────────────────────────────────
+
+const fotoProfil = document.querySelector(".hero-center img");
+if (fotoProfil) {
+    fotoProfil.addEventListener("click", function () {
+        alert("Hello! Thanks for visiting Ridwan Maulana's portfolio.");
+    });
+}
+
+// ─── Login ────────────────────────────────────────────────────────────────────
+
+const loginForm = document.getElementById("loginForm");
+if (loginForm) {
+    if (isLoggedIn()) {
+        window.location.href = "project-form.html";
+    }
+
+    loginForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const username = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value;
+        const errorEl = document.getElementById("loginError");
+
+        if (username === user.username && password === user.password) {
+            setLoggedIn(true);
+            window.location.href = "project-form.html";
+        } else {
+            errorEl.textContent = "Incorrect username or password.";
+        }
+    });
+}
+
+// ─── Manage Projects Form ─────────────────────────────────────────────────────
+
+const projectForm = document.getElementById("projectForm");
+if (projectForm) {
+    if (!isLoggedIn()) {
+        window.location.href = "login.html";
+    }
+
+    const imageInput = document.getElementById("projectImage");
+    const imagePreview = document.getElementById("imagePreview");
+    const projectIdInput = document.getElementById("projectId");
+    const formHeading = document.getElementById("formHeading");
+    const formSubtitle = document.getElementById("formSubtitle");
+    const submitBtn = document.getElementById("submitBtn");
+    const cancelEditBtn = document.getElementById("cancelEditBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const imageHint = document.getElementById("imageHint");
+    const messageEl = document.getElementById("formMessage");
+
+    let imageDataArray = [];
+    let keepExistingImages = [];
+
+    function renderPreviewGrid() {
+        const all = keepExistingImages.concat(imageDataArray);
+        if (all.length === 0) {
+            imagePreview.innerHTML = "";
+            return;
+        }
+        imagePreview.innerHTML = all
+            .map(function (src, i) {
+                return (
+                    `<div class="preview-thumb">` +
+                    `<img src="${src}" alt="Preview ${i + 1}">` +
+                    `<button type="button" class="preview-remove" data-index="${i}" aria-label="Remove image">&times;</button>` +
+                    `</div>`
+                );
+            })
+            .join("");
+    }
+
+    imagePreview.addEventListener("click", function (e) {
+        const btn = e.target.closest(".preview-remove");
+        if (!btn) return;
+        const idx = parseInt(btn.getAttribute("data-index"), 10);
+        const totalExisting = keepExistingImages.length;
+        if (idx < totalExisting) {
+            keepExistingImages.splice(idx, 1);
+        } else {
+            imageDataArray.splice(idx - totalExisting, 1);
+        }
+        renderPreviewGrid();
+    });
+
+    function resetFormMode() {
+        projectIdInput.value = "";
+        imageDataArray = [];
+        keepExistingImages = [];
+        imageInput.value = "";
+        imageInput.required = true;
+        imageHint.textContent = "Required when adding a new project. You can select multiple images.";
+        formHeading.textContent = "ADD PROJECT";
+        formSubtitle.textContent = "Fill in the details for a new portfolio project";
+        submitBtn.textContent = "Save Project";
+        cancelEditBtn.hidden = true;
+        resetBtn.hidden = false;
+        messageEl.textContent = "";
+        messageEl.className = "form-message";
+        projectForm.reset();
+        renderPreviewGrid();
+    }
+
+    function fillFormForEdit(project) {
+        projectIdInput.value = project.id;
+        document.getElementById("projectTitle").value = project.title;
+        document.getElementById("projectDescription").value = project.description;
+        document.getElementById("projectLink").value = project.link || "";
+        keepExistingImages = (project.images || []).slice();
+        imageDataArray = [];
+        imageInput.value = "";
+        imageInput.required = false;
+        imageHint.textContent = "Leave empty to keep existing images, or add more.";
+        renderPreviewGrid();
+        formHeading.textContent = "EDIT PROJECT";
+        formSubtitle.textContent = "Update the selected project details";
+        submitBtn.textContent = "Update Project";
+        cancelEditBtn.hidden = false;
+        resetBtn.hidden = true;
+        messageEl.textContent = "";
+        messageEl.className = "form-message";
+        projectForm.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function renderManageList() {
+        const listEl = document.getElementById("manageProjectsList");
+        if (!listEl) return;
+
+        const projects = getAllProjects();
+        const countEl = document.getElementById("projectCount");
+        if (countEl) {
+            countEl.textContent =
+                projects.length === 0
+                    ? "No projects yet"
+                    : "Showing " + projects.length + " project" + (projects.length === 1 ? "" : "s");
+        }
+
+        if (projects.length === 0) {
+            listEl.innerHTML =
+                '<p class="empty-list">No projects yet. Add one using the form above.</p>';
+            return;
+        }
+
+        listEl.innerHTML = projects
+            .map(function (project) {
+                const imgs = project.images || [];
+                const linkHtml = project.link
+                    ? `<a href="${escapeHtml(project.link)}" target="_blank" rel="noopener" class="manage-link">Open Link</a>`
+                    : '<span class="no-link">No link</span>';
+
+                const thumbsHtml = imgs.length > 0
+                    ? `<div class="manage-thumbs">` +
+                      imgs.map(function (src, i) {
+                          return `<img src="${src}" alt="${escapeHtml(project.title)}" class="clickable-image manage-thumb" data-project-id="${project.id}" data-img-index="${i}" title="Click to view full image">`;
+                      }).join("") +
+                      `</div>`
+                    : "";
+
+                return (
+                    `<div class="manage-card" data-id="${project.id}">` +
+                    thumbsHtml +
+                    `<div class="manage-card-body">` +
+                    `<h3>${escapeHtml(project.title)}</h3>` +
+                    `<p>${escapeHtml(project.description)}</p>` +
+                    linkHtml +
+                    `<div class="manage-actions">` +
+                    `<button type="button" class="btn-edit" data-edit="${project.id}"><i class="fa-solid fa-pen"></i> Edit</button>` +
+                    `<button type="button" class="btn-delete" data-delete="${project.id}"><i class="fa-solid fa-trash"></i> Delete</button>` +
+                    `</div></div></div>`
+                );
+            })
+            .join("");
+    }
+
+    imageInput.addEventListener("change", function () {
+        const files = Array.from(this.files);
+        if (files.length === 0) return;
+
+        let loaded = 0;
+        files.forEach(function (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                imageDataArray.push(e.target.result);
+                loaded++;
+                if (loaded === files.length) {
+                    renderPreviewGrid();
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+        imageInput.value = "";
+    });
+
+    projectForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const title = document.getElementById("projectTitle").value.trim();
+        const description = document.getElementById("projectDescription").value.trim();
+        const link = document.getElementById("projectLink").value.trim();
+        const editId = projectIdInput.value;
+
+        if (!title || !description) {
+            messageEl.textContent = "Title and description are required.";
+            messageEl.className = "form-message error";
+            return;
+        }
+
+        const finalImages = keepExistingImages.concat(imageDataArray);
+
+        if (!editId && finalImages.length === 0) {
+            messageEl.textContent = "At least one image is required for a new project.";
+            messageEl.className = "form-message error";
+            return;
+        }
+
+        const projects = getProjects();
+
+        if (editId) {
+            const index = projects.findIndex(function (p) {
+                return String(p.id) === String(editId);
+            });
+            if (index === -1) {
+                messageEl.textContent = "Project not found.";
+                messageEl.className = "form-message error";
+                return;
+            }
+            projects[index] = {
+                ...projects[index],
+                title,
+                description,
+                link: link || "",
+                images: finalImages.length > 0 ? finalImages : (projects[index].images || [])
+            };
+            saveProjects(projects);
+            messageEl.textContent = "Project updated successfully!";
+            messageEl.className = "form-message success";
+            resetFormMode();
+        } else {
+            projects.push({
+                id: Date.now(),
+                title,
+                description,
+                link: link || "",
+                images: finalImages
+            });
+            saveProjects(projects);
+            messageEl.textContent = "Project saved successfully!";
+            messageEl.className = "form-message success";
+            imageDataArray = [];
+            keepExistingImages = [];
+            projectForm.reset();
+            projectIdInput.value = "";
+            renderPreviewGrid();
+        }
+
+        renderManageList();
+    });
+
+    projectForm.addEventListener("reset", function () {
+        if (projectIdInput.value) return;
+        setTimeout(function () {
+            imageDataArray = [];
+            keepExistingImages = [];
+            renderPreviewGrid();
+            messageEl.textContent = "";
+            messageEl.className = "form-message";
+        }, 0);
+    });
+
+    cancelEditBtn.addEventListener("click", function () {
+        resetFormMode();
+    });
+
+    document.getElementById("manageProjectsList").addEventListener("click", function (e) {
+        const thumb = e.target.closest("[data-project-id][data-img-index]");
+        if (thumb) {
+            const pid = thumb.getAttribute("data-project-id");
+            const startIdx = parseInt(thumb.getAttribute("data-img-index"), 10);
+            const project = getProjects().find(function (p) {
+                return String(p.id) === String(pid);
+            });
+            if (project && project.images && project.images.length > 0) {
+                openLightbox(project.images, startIdx, project.title);
+            }
+            return;
+        }
+
+        const editBtn = e.target.closest("[data-edit]");
+        const deleteBtn = e.target.closest("[data-delete]");
+
+        if (editBtn) {
+            const id = editBtn.getAttribute("data-edit");
+            const project = getProjects().find(function (p) {
+                return String(p.id) === String(id);
+            });
+            if (project) fillFormForEdit(project);
+            return;
+        }
+
+        if (deleteBtn) {
+            const id = deleteBtn.getAttribute("data-delete");
+            if (!confirm("Are you sure you want to delete this project?")) return;
+
+            const projects = getProjects().filter(function (p) {
+                return String(p.id) !== String(id);
+            });
+            saveProjects(projects);
+
+            if (String(projectIdInput.value) === String(id)) {
+                resetFormMode();
+            }
+
+            renderManageList();
+            messageEl.textContent = "Project deleted successfully.";
+            messageEl.className = "form-message success";
+        }
+    });
+
+    renderManageList();
+}
+
+// ─── Logout ───────────────────────────────────────────────────────────────────
+
+const logoutBtn = document.getElementById("logoutBtn");
+if (logoutBtn) {
+    logoutBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        setLoggedIn(false);
+        window.location.href = "login.html";
+    });
+}
+
+// ─── Public Projects Page ─────────────────────────────────────────────────────
+
+const projectsContainer = document.querySelector(".projects-container");
+if (projectsContainer && document.getElementById("projects")) {
+    const saved = getAllProjects();
+    projectsContainer.innerHTML = "";
+
+    if (saved.length === 0) {
+        projectsContainer.innerHTML =
+            '<p class="empty-list">No projects to display yet.</p>';
+    } else {
+        const firstThree = saved.slice(0, 3);
+        const rest = saved.slice(3);
+
+        function buildCard(project, idx) {
+            const imgs = project.images || [];
+            const card = document.createElement("div");
+            card.className = "projects-card";
+
+            if (imgs.length > 0) {
+                card.classList.add("projects-card-clickable");
+                card.setAttribute("data-project-idx", String(idx));
+                card.setAttribute("title", "Click to view images");
+                card.setAttribute("role", "button");
+                card.setAttribute("tabindex", "0");
+            }
+
+            let html = "";
+            if (imgs.length > 0) {
+                html += `<div class="card-img-wrap">`;
+                html += `<img src="${imgs[0]}" alt="${escapeHtml(project.title)}" class="clickable-image">`;
+                if (imgs.length > 1) {
+                    html += `<span class="img-count-badge"><i class="fa-solid fa-images"></i> ${imgs.length}</span>`;
+                }
+                html += `</div>`;
+            }
+            html += `<h3>${escapeHtml(project.title)}</h3><br>`;
+            html += `<p>${escapeHtml(project.description)}</p><br>`;
+            if (project.link) {
+                html += `<a href="${escapeHtml(project.link)}" target="_blank" rel="noopener" class="project-link">View Project</a>`;
+            }
+            card.innerHTML = html;
+            return card;
+        }
+
+        const rowFirst = document.createElement("div");
+        rowFirst.className = "projects-row-first";
+        firstThree.forEach(function (project, i) {
+            rowFirst.appendChild(buildCard(project, i));
+        });
+        projectsContainer.appendChild(rowFirst);
+
+        if (rest.length > 0) {
+            const rowRest = document.createElement("div");
+            rowRest.className = "projects-row-rest";
+            rest.forEach(function (project, i) {
+                rowRest.appendChild(buildCard(project, i + 3));
+            });
+            projectsContainer.appendChild(rowRest);
+        }
+    }
+
+    projectsContainer.addEventListener("click", function (e) {
+        if (e.target.closest("a")) return;
+        const card = e.target.closest("[data-project-idx]");
+        if (!card) return;
+        const idx = parseInt(card.getAttribute("data-project-idx"), 10);
+        const project = saved[idx];
+        if (project && project.images && project.images.length > 0) {
+            openLightbox(project.images, 0, project.title);
+        }
+    });
+
+    projectsContainer.addEventListener("keydown", function (e) {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        const card = e.target.closest("[data-project-idx]");
+        if (!card) return;
+        e.preventDefault();
+        const idx = parseInt(card.getAttribute("data-project-idx"), 10);
+        const project = saved[idx];
+        if (project && project.images && project.images.length > 0) {
+            openLightbox(project.images, 0, project.title);
+        }
+    });
+}

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Projects | Ridwan Maulana</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <h1>Full Stack Developer</h1>
+            <div class="Menu">
+                <a href="semantic.html#home">Home</a>
+                <a href="semantic.html#about">About</a>
+                <a href="semantic.html#projects">Projects</a>
+                <a href="project-form.html">Manage Projects</a>
+                <a href="#" id="logoutBtn">Logout</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="manage-page">
+        <div class="auth-card auth-card-wide">
+            <h2 id="formHeading">ADD PROJECT</h2>
+            <p class="auth-subtitle" id="formSubtitle">Fill in the details for a new portfolio project</p>
+
+            <form id="projectForm">
+                <input type="hidden" id="projectId" value="">
+
+                <div class="form-group">
+                    <label for="projectImage">Upload Images <span class="optional-tag">(select multiple)</span></label>
+                    <input type="file" id="projectImage" name="projectImage" accept="image/*" multiple>
+                    <p class="field-hint" id="imageHint">Required when adding a new project. You can select multiple images.</p>
+                    <div id="imagePreview" class="image-preview-grid"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="projectTitle">Project Title</label>
+                    <input type="text" id="projectTitle" name="projectTitle" placeholder="Example: E-Commerce Website" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="projectDescription">Description</label>
+                    <textarea id="projectDescription" name="projectDescription" rows="5" placeholder="Briefly describe this project..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="projectLink">Project Link <span class="optional-tag">(optional)</span></label>
+                    <input type="url" id="projectLink" name="projectLink" placeholder="https://...">
+                </div>
+
+                <p id="formMessage" class="form-message"></p>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="cancelEditBtn" hidden>Cancel</button>
+                    <button type="reset" class="btn-secondary" id="resetBtn">Reset</button>
+                    <button type="submit" class="btn-primary" id="submitBtn">Save Project</button>
+                </div>
+            </form>
+
+            <a href="semantic.html#projects" class="auth-back">&larr; View Project List</a>
+        </div>
+
+        <section class="manage-list-section">
+            <h2>PROJECT LIST</h2>
+            <p class="auth-subtitle">Edit or delete all saved projects</p>
+            <p id="projectCount" class="project-count"></p>
+            <div id="manageProjectsList" class="manage-projects-list"></div>
+        </section>
+    </main>
+
+    <div id="imageLightbox" class="image-lightbox" hidden>
+        <button type="button" class="lightbox-close" id="lightboxClose" aria-label="Close">&times;</button>
+        <button type="button" class="lightbox-arrow lightbox-prev" id="lightboxPrev" aria-label="Previous">&#8249;</button>
+        <div class="lightbox-inner">
+            <img id="lightboxImage" src="" alt="Full project image">
+            <p id="lightboxCaption" class="lightbox-caption"></p>
+        </div>
+        <button type="button" class="lightbox-arrow lightbox-next" id="lightboxNext" aria-label="Next">&#8250;</button>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 MHD Ridwan Maulana</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
