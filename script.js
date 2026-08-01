@@ -1,5 +1,26 @@
 console.log("Hello Ridwan! JavaScript connected successfully.");
 
+// ─── Hamburger Menu ───────────────────────────────────────────────────────────
+
+const hamburgerBtn = document.getElementById("hamburgerBtn");
+const navMenu = document.getElementById("navMenu");
+
+if (hamburgerBtn && navMenu) {
+    hamburgerBtn.addEventListener("click", function () {
+        const isOpen = navMenu.classList.toggle("open");
+        hamburgerBtn.classList.toggle("active", isOpen);
+        hamburgerBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    });
+
+    navMenu.querySelectorAll("a").forEach(function (link) {
+        link.addEventListener("click", function () {
+            navMenu.classList.remove("open");
+            hamburgerBtn.classList.remove("active");
+            hamburgerBtn.setAttribute("aria-expanded", "false");
+        });
+    });
+}
+
 const AUTH_KEY = "portfolio_logged_in";
 const PROJECTS_KEY = "portfolio_projects";
 const PROJECTS_LANG_KEY = "portfolio_projects_lang_v2";

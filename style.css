@@ -783,6 +783,39 @@ margin-top: 40px;}
     color: #111;
 }
 
+.hamburger {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    z-index: 1001;
+}
+
+.hamburger span {
+    display: block;
+    width: 25px;
+    height: 2px;
+    background: white;
+    border-radius: 2px;
+    transition: 0.3s;
+}
+
+.hamburger.active span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.hamburger.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburger.active span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+}
+
 @media (max-width: 1024px) {
     .projects-row-rest {
         grid-template-columns: repeat(3, 1fr);
@@ -790,8 +823,104 @@ margin-top: 40px;}
 }
 
 @media (max-width: 768px) {
+    header {
+        padding: 16px 20px;
+    }
+
+    nav {
+        flex-wrap: wrap;
+        position: relative;
+    }
+
+    .hamburger {
+        display: flex;
+    }
+
+    .Menu {
+        display: none;
+        flex-direction: column;
+        gap: 0;
+        width: 100%;
+        background: #111;
+        padding: 10px 0 16px;
+        order: 3;
+    }
+
+    .Menu.open {
+        display: flex;
+    }
+
+    .Menu a {
+        padding: 12px 4px;
+        font-size: 16px;
+        border-bottom: 1px solid #222;
+    }
+
+    .Menu a:last-child {
+        border-bottom: none;
+    }
+
+    .hero {
+        flex-direction: column;
+        padding: 100px 20px 40px;
+        gap: 30px;
+    }
+
+    .hero-center {
+        order: -1;
+        width: 100%;
+    }
+
+    .hero-center img {
+        max-width: 280px;
+        margin: 0 auto;
+    }
+
+    .hero-left {
+        max-width: 100%;
+        text-align: center;
+    }
+
+    .hero-left h1 {
+        font-size: 36px;
+    }
+
+    .hero-left p {
+        font-size: 16px;
+    }
+
+    .hero-right {
+        width: 100%;
+    }
+
+    .hero-right h3 {
+        font-size: 24px;
+    }
+
+    .hero-right p {
+        font-size: 15px;
+    }
+
+    .about {
+        padding: 80px 20px 40px;
+    }
+
+    .about-container {
+        flex-direction: column;
+        gap: 30px;
+    }
+
+    .about-image img {
+        width: 100%;
+        max-width: 360px;
+    }
+
+    .about-text {
+        font-size: 16px;
+    }
+
     #projects {
-        padding: 60px 24px 80px;
+        padding: 60px 20px 80px;
     }
 
     .projects-row-first,
@@ -801,6 +930,10 @@ margin-top: 40px;}
 }
 
 @media (max-width: 480px) {
+    .hero-left h1 {
+        font-size: 28px;
+    }
+
     .projects-row-first,
     .projects-row-rest {
         grid-template-columns: 1fr;
