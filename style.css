@@ -151,6 +151,19 @@ text-align: center;
 padding: 20px 0;
 margin-top: 40px;}
 
+.admin-link {
+    display: inline-block;
+    margin-top: 8px;
+    color: #2a2a2a;
+    font-size: 11px;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.admin-link:hover {
+    color: #555;
+}
+
 .about{padding: 120px 100px;
 }
 
