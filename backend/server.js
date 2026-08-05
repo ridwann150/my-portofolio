@@ -8,18 +8,15 @@ const express = require('express');
 const cors = require('cors');
 
 // Prisma Client adalah ORM untuk mengakses PostgreSQL.
-// Client di-generate dari prisma/schema.prisma ke folder generated/prisma.
+// Prisma 7 membutuhkan driver adapter (PrismaPg) untuk koneksi ke database.
 const { PrismaClient } = require('@prisma/client');
-// PrismaPg adalah driver adapter yang menghubungkan Prisma ke PostgreSQL.
-const prisma = new PrismaClient();
+const { PrismaPg } = require('@prisma/adapter-pg');
+
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+const prisma = new PrismaClient({ adapter });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-
-// Buat adapter koneksi database dari DATABASE_URL di file .env
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
-// Inisialisasi Prisma Client dengan adapter tersebut
-const prisma = new PrismaClient({ adapter });
 
 // CORS middleware digunakan untuk mengizinkan frontend mengakses API dari domain/port yang berbeda
 app.use(cors());
@@ -40,6 +37,11 @@ app.use('/api/projects/:id', (req, res, next) => {
         });
     }
     next();
+});
+
+// Route dasar agar URL root tidak memicu error di Vercel
+app.get('/', (req, res) => {
+    res.send('Backend OK');
 });
 
 // Endpoint sederhana untuk pengetesan awal
@@ -198,13 +200,11 @@ app.delete('/api/projects/:id', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+// Di Vercel (production), app diekspor sebagai serverless function — jangan panggil listen
 if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-  });
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+    });
 }
 
 module.exports = app;
