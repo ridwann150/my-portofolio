@@ -587,7 +587,7 @@ if (projectForm) {
 
         if (editBtn) {
             const id = editBtn.getAttribute("data-edit");
-            fetch("http://localhost:5000/api/projects")
+            fetch("https://my-portofolio-7o3h.vercel.app/api/projects")
                 .then(res => res.json())
                 .then(result => {
                     const project = (result.data || []).find(function (p) {
@@ -605,7 +605,7 @@ if (projectForm) {
             const id = deleteBtn.getAttribute("data-delete");
             if (!confirm("Are you sure you want to delete this project?")) return;
 
-            fetch(`http://localhost:5000/api/projects/${id}`, {
+            fetch(`https://my-portofolio-7o3h.vercel.app/api/projects/${id}`, {
                 method: "DELETE"
             })
             .then(res => res.json())
@@ -650,7 +650,7 @@ const projectsContainer = document.querySelector(".projects-container");
 if (projectsContainer && document.getElementById("projects")) {
     projectsContainer.innerHTML = '<p class="empty-list">Loading projects...</p>';
 
-    fetch("http://localhost:5000/api/projects")
+    fetch("https://my-portofolio-7o3h.vercel.app/api/projects")
         .then(function (response) {
             return response.json();
         })
