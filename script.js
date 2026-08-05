@@ -396,7 +396,7 @@ if (projectForm) {
         const listEl = document.getElementById("manageProjectsList");
         if (!listEl) return;
 
-        fetch("http://localhost:5000/api/projects")
+        fetch("https://my-portofolio-7o3h.vercel.app/api/projects")
             .then(res => res.json())
             .then(result => {
                 const projects = (result.data || []).slice().sort((a, b) => Number(b.id) - Number(a.id));
@@ -486,7 +486,7 @@ if (projectForm) {
 
         if (editId) {
             // PUT ke API untuk memperbarui project
-            fetch(`http://localhost:5000/api/projects/${editId}`, {
+            fetch(`https://my-portofolio-7o3h.vercel.app/api/projects/${editId}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json"
@@ -517,7 +517,7 @@ if (projectForm) {
             });
         } else {
             // POST ke API
-            fetch("http://localhost:5000/api/projects", {
+            fetch("https://my-portofolio-7o3h.vercel.app/api/projects", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
