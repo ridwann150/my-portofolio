@@ -2,8 +2,7 @@
 // Prisma menggunakan file ini untuk membuat client dan tabel di PostgreSQL.
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {

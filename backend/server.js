@@ -9,9 +9,9 @@ const cors = require('cors');
 
 // Prisma Client adalah ORM untuk mengakses PostgreSQL.
 // Client di-generate dari prisma/schema.prisma ke folder generated/prisma.
-const { PrismaClient } = require('./generated/prisma/client.ts');
+const { PrismaClient } = require('@prisma/client');
 // PrismaPg adalah driver adapter yang menghubungkan Prisma ke PostgreSQL.
-const { PrismaPg } = require('@prisma/adapter-pg');
+const prisma = new PrismaClient();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
