@@ -4,10 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "tsx server.js",
-    "dev": "nodemon --exec tsx server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "start": "node server.js",
+  "build": "prisma generate"
+},
+  }
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -28,4 +28,4 @@
     "prisma": "^7.9.1",
     "tsx": "^4.23.5"
   }
-}
+
