@@ -358,8 +358,8 @@ if (projectForm) {
         imageDataArray = [];
         keepExistingImages = [];
         imageInput.value = "";
-        imageInput.required = true;
-        imageHint.textContent = "Required when adding a new project. You can select multiple images.";
+        imageInput.required = false;
+        imageHint.textContent = "Images are disabled for now.";
         formHeading.textContent = "ADD PROJECT";
         formSubtitle.textContent = "Fill in the details for a new portfolio project";
         submitBtn.textContent = "Save Project";
@@ -396,50 +396,58 @@ if (projectForm) {
         const listEl = document.getElementById("manageProjectsList");
         if (!listEl) return;
 
-        const projects = getAllProjects();
-        const countEl = document.getElementById("projectCount");
-        if (countEl) {
-            countEl.textContent =
-                projects.length === 0
-                    ? "No projects yet"
-                    : "Showing " + projects.length + " project" + (projects.length === 1 ? "" : "s");
-        }
+        fetch("http://localhost:5000/api/projects")
+            .then(res => res.json())
+            .then(result => {
+                const projects = (result.data || []).slice().sort((a, b) => Number(b.id) - Number(a.id));
+                const countEl = document.getElementById("projectCount");
+                if (countEl) {
+                    countEl.textContent =
+                        projects.length === 0
+                            ? "No projects yet"
+                            : "Showing " + projects.length + " project" + (projects.length === 1 ? "" : "s");
+                }
 
-        if (projects.length === 0) {
-            listEl.innerHTML =
-                '<p class="empty-list">No projects yet. Add one using the form above.</p>';
-            return;
-        }
+                if (projects.length === 0) {
+                    listEl.innerHTML =
+                        '<p class="empty-list">No projects yet. Add one using the form above.</p>';
+                    return;
+                }
 
-        listEl.innerHTML = projects
-            .map(function (project) {
-                const imgs = project.images || [];
-                const linkHtml = project.link
-                    ? `<a href="${escapeHtml(project.link)}" target="_blank" rel="noopener" class="manage-link">Open Link</a>`
-                    : '<span class="no-link">No link</span>';
+                listEl.innerHTML = projects
+                    .map(function (project) {
+                        const imgs = project.images || [];
+                        const linkHtml = project.link
+                            ? `<a href="${escapeHtml(project.link)}" target="_blank" rel="noopener" class="manage-link">Open Link</a>`
+                            : '<span class="no-link">No link</span>';
 
-                const thumbsHtml = imgs.length > 0
-                    ? `<div class="manage-thumbs">` +
-                      imgs.map(function (src, i) {
-                          return `<img src="${src}" alt="${escapeHtml(project.title)}" class="clickable-image manage-thumb" data-project-id="${project.id}" data-img-index="${i}" title="Click to view full image">`;
-                      }).join("") +
-                      `</div>`
-                    : "";
+                        const thumbsHtml = imgs.length > 0
+                            ? `<div class="manage-thumbs">` +
+                              imgs.map(function (src, i) {
+                                  return `<img src="${src}" alt="${escapeHtml(project.title)}" class="clickable-image manage-thumb" data-project-id="${project.id}" data-img-index="${i}" title="Click to view full image">`;
+                              }).join("") +
+                              `</div>`
+                            : "";
 
-                return (
-                    `<div class="manage-card" data-id="${project.id}">` +
-                    thumbsHtml +
-                    `<div class="manage-card-body">` +
-                    `<h3>${escapeHtml(project.title)}</h3>` +
-                    `<p>${escapeHtml(project.description)}</p>` +
-                    linkHtml +
-                    `<div class="manage-actions">` +
-                    `<button type="button" class="btn-edit" data-edit="${project.id}"><i class="fa-solid fa-pen"></i> Edit</button>` +
-                    `<button type="button" class="btn-delete" data-delete="${project.id}"><i class="fa-solid fa-trash"></i> Delete</button>` +
-                    `</div></div></div>`
-                );
+                        return (
+                            `<div class="manage-card" data-id="${project.id}">` +
+                            thumbsHtml +
+                            `<div class="manage-card-body">` +
+                            `<h3>${escapeHtml(project.title)}</h3>` +
+                            `<p>${escapeHtml(project.description)}</p>` +
+                            linkHtml +
+                            `<div class="manage-actions">` +
+                            `<button type="button" class="btn-edit" data-edit="${project.id}"><i class="fa-solid fa-pen"></i> Edit</button>` +
+                            `<button type="button" class="btn-delete" data-delete="${project.id}"><i class="fa-solid fa-trash"></i> Delete</button>` +
+                            `</div></div></div>`
+                        );
+                    })
+                    .join("");
             })
-            .join("");
+            .catch(err => {
+                console.error("Error loading manage projects:", err);
+                listEl.innerHTML = '<p class="empty-list">Failed to load projects from server.</p>';
+            });
     }
 
     imageInput.addEventListener("change", function () {
@@ -474,55 +482,75 @@ if (projectForm) {
             return;
         }
 
-        const finalImages = keepExistingImages.concat(imageDataArray);
-
-        if (!editId && finalImages.length === 0) {
-            messageEl.textContent = "At least one image is required for a new project.";
-            messageEl.className = "form-message error";
-            return;
-        }
-
-        const projects = getProjects();
+        const finalImages = [];
 
         if (editId) {
-            const index = projects.findIndex(function (p) {
-                return String(p.id) === String(editId);
-            });
-            if (index === -1) {
-                messageEl.textContent = "Project not found.";
+            // PUT ke API untuk memperbarui project
+            fetch(`http://localhost:5000/api/projects/${editId}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    title: title,
+                    description: description,
+                    link: link || "",
+                    images: finalImages
+                })
+            })
+            .then(res => res.json())
+            .then(resData => {
+                if (resData.success) {
+                    messageEl.textContent = "Project updated successfully!";
+                    messageEl.className = "form-message success";
+                    resetFormMode();
+                    renderManageList();
+                } else {
+                    messageEl.textContent = resData.message || "Failed to update project.";
+                    messageEl.className = "form-message error";
+                }
+            })
+            .catch(err => {
+                console.error("Error updating project:", err);
+                messageEl.textContent = "Error updating project on server.";
                 messageEl.className = "form-message error";
-                return;
-            }
-            projects[index] = {
-                ...projects[index],
-                title,
-                description,
-                link: link || "",
-                images: finalImages.length > 0 ? finalImages : (projects[index].images || [])
-            };
-            saveProjects(projects);
-            messageEl.textContent = "Project updated successfully!";
-            messageEl.className = "form-message success";
-            resetFormMode();
-        } else {
-            projects.push({
-                id: Date.now(),
-                title,
-                description,
-                link: link || "",
-                images: finalImages
             });
-            saveProjects(projects);
-            messageEl.textContent = "Project saved successfully!";
-            messageEl.className = "form-message success";
-            imageDataArray = [];
-            keepExistingImages = [];
-            projectForm.reset();
-            projectIdInput.value = "";
-            renderPreviewGrid();
+        } else {
+            // POST ke API
+            fetch("http://localhost:5000/api/projects", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    title: title,
+                    description: description,
+                    link: link || "",
+                    images: finalImages
+                })
+            })
+            .then(res => res.json())
+            .then(resData => {
+                if (resData.success) {
+                    messageEl.textContent = "Project saved successfully!";
+                    messageEl.className = "form-message success";
+                    imageDataArray = [];
+                    keepExistingImages = [];
+                    projectForm.reset();
+                    projectIdInput.value = "";
+                    renderPreviewGrid();
+                    renderManageList();
+                } else {
+                    messageEl.textContent = resData.message || "Failed to save project.";
+                    messageEl.className = "form-message error";
+                }
+            })
+            .catch(err => {
+                console.error("Error saving project:", err);
+                messageEl.textContent = "Error saving project to server.";
+                messageEl.className = "form-message error";
+            });
         }
-
-        renderManageList();
     });
 
     projectForm.addEventListener("reset", function () {
@@ -559,10 +587,17 @@ if (projectForm) {
 
         if (editBtn) {
             const id = editBtn.getAttribute("data-edit");
-            const project = getProjects().find(function (p) {
-                return String(p.id) === String(id);
-            });
-            if (project) fillFormForEdit(project);
+            fetch("http://localhost:5000/api/projects")
+                .then(res => res.json())
+                .then(result => {
+                    const project = (result.data || []).find(function (p) {
+                        return String(p.id) === String(id);
+                    });
+                    if (project) fillFormForEdit(project);
+                })
+                .catch(err => {
+                    console.error("Error fetching project for edit:", err);
+                });
             return;
         }
 
@@ -570,18 +605,28 @@ if (projectForm) {
             const id = deleteBtn.getAttribute("data-delete");
             if (!confirm("Are you sure you want to delete this project?")) return;
 
-            const projects = getProjects().filter(function (p) {
-                return String(p.id) !== String(id);
+            fetch(`http://localhost:5000/api/projects/${id}`, {
+                method: "DELETE"
+            })
+            .then(res => res.json())
+            .then(resData => {
+                if (resData.success) {
+                    if (String(projectIdInput.value) === String(id)) {
+                        resetFormMode();
+                    }
+                    renderManageList();
+                    messageEl.textContent = "Project deleted successfully.";
+                    messageEl.className = "form-message success";
+                } else {
+                    messageEl.textContent = resData.message || "Failed to delete project.";
+                    messageEl.className = "form-message error";
+                }
+            })
+            .catch(err => {
+                console.error("Error deleting project:", err);
+                messageEl.textContent = "Error deleting project on server.";
+                messageEl.className = "form-message error";
             });
-            saveProjects(projects);
-
-            if (String(projectIdInput.value) === String(id)) {
-                resetFormMode();
-            }
-
-            renderManageList();
-            messageEl.textContent = "Project deleted successfully.";
-            messageEl.className = "form-message success";
         }
     });
 
@@ -603,84 +648,96 @@ if (logoutBtn) {
 
 const projectsContainer = document.querySelector(".projects-container");
 if (projectsContainer && document.getElementById("projects")) {
-    const saved = getAllProjects();
-    projectsContainer.innerHTML = "";
+    projectsContainer.innerHTML = '<p class="empty-list">Loading projects...</p>';
 
-    if (saved.length === 0) {
-        projectsContainer.innerHTML =
-            '<p class="empty-list">No projects to display yet.</p>';
-    } else {
-        const firstThree = saved.slice(0, 3);
-        const rest = saved.slice(3);
+    fetch("http://localhost:5000/api/projects")
+        .then(function (response) {
+            return response.json();
+        })
+        .then(function (result) {
+            const saved = result.data || [];
+            projectsContainer.innerHTML = "";
 
-        function buildCard(project, idx) {
-            const imgs = project.images || [];
-            const card = document.createElement("div");
-            card.className = "projects-card";
+            if (saved.length === 0) {
+                projectsContainer.innerHTML =
+                    '<p class="empty-list">No projects to display yet.</p>';
+            } else {
+                const firstThree = saved.slice(0, 3);
+                const rest = saved.slice(3);
 
-            if (imgs.length > 0) {
-                card.classList.add("projects-card-clickable");
-                card.setAttribute("data-project-idx", String(idx));
-                card.setAttribute("title", "Click to view images");
-                card.setAttribute("role", "button");
-                card.setAttribute("tabindex", "0");
-            }
+                function buildCard(project, idx) {
+                    const imgs = project.images || [];
+                    const card = document.createElement("div");
+                    card.className = "projects-card";
 
-            let html = "";
-            if (imgs.length > 0) {
-                html += `<div class="card-img-wrap">`;
-                html += `<img src="${imgs[0]}" alt="${escapeHtml(project.title)}" class="clickable-image">`;
-                if (imgs.length > 1) {
-                    html += `<span class="img-count-badge"><i class="fa-solid fa-images"></i> ${imgs.length}</span>`;
+                    if (imgs.length > 0) {
+                        card.classList.add("projects-card-clickable");
+                        card.setAttribute("data-project-idx", String(idx));
+                        card.setAttribute("title", "Click to view images");
+                        card.setAttribute("role", "button");
+                        card.setAttribute("tabindex", "0");
+                    }
+
+                    let html = "";
+                    if (imgs.length > 0) {
+                        html += `<div class="card-img-wrap">`;
+                        html += `<img src="${imgs[0]}" alt="${escapeHtml(project.title)}" class="clickable-image">`;
+                        if (imgs.length > 1) {
+                            html += `<span class="img-count-badge"><i class="fa-solid fa-images"></i> ${imgs.length}</span>`;
+                        }
+                        html += `</div>`;
+                    }
+                    html += `<h3>${escapeHtml(project.title)}</h3><br>`;
+                    html += `<p>${escapeHtml(project.description)}</p><br>`;
+                    if (project.link) {
+                        html += `<a href="${escapeHtml(project.link)}" target="_blank" rel="noopener" class="project-link">View Project</a>`;
+                    }
+                    card.innerHTML = html;
+                    return card;
                 }
-                html += `</div>`;
-            }
-            html += `<h3>${escapeHtml(project.title)}</h3><br>`;
-            html += `<p>${escapeHtml(project.description)}</p><br>`;
-            if (project.link) {
-                html += `<a href="${escapeHtml(project.link)}" target="_blank" rel="noopener" class="project-link">View Project</a>`;
-            }
-            card.innerHTML = html;
-            return card;
-        }
 
-        const rowFirst = document.createElement("div");
-        rowFirst.className = "projects-row-first";
-        firstThree.forEach(function (project, i) {
-            rowFirst.appendChild(buildCard(project, i));
-        });
-        projectsContainer.appendChild(rowFirst);
+                const rowFirst = document.createElement("div");
+                rowFirst.className = "projects-row-first";
+                firstThree.forEach(function (project, i) {
+                    rowFirst.appendChild(buildCard(project, i));
+                });
+                projectsContainer.appendChild(rowFirst);
 
-        if (rest.length > 0) {
-            const rowRest = document.createElement("div");
-            rowRest.className = "projects-row-rest";
-            rest.forEach(function (project, i) {
-                rowRest.appendChild(buildCard(project, i + 3));
+                if (rest.length > 0) {
+                    const rowRest = document.createElement("div");
+                    rowRest.className = "projects-row-rest";
+                    rest.forEach(function (project, i) {
+                        rowRest.appendChild(buildCard(project, i + 3));
+                    });
+                    projectsContainer.appendChild(rowRest);
+                }
+            }
+
+            projectsContainer.addEventListener("click", function (e) {
+                if (e.target.closest("a")) return;
+                const card = e.target.closest("[data-project-idx]");
+                if (!card) return;
+                const idx = parseInt(card.getAttribute("data-project-idx"), 10);
+                const project = saved[idx];
+                if (project && project.images && project.images.length > 0) {
+                    openLightbox(project.images, 0, project.title);
+                }
             });
-            projectsContainer.appendChild(rowRest);
-        }
-    }
 
-    projectsContainer.addEventListener("click", function (e) {
-        if (e.target.closest("a")) return;
-        const card = e.target.closest("[data-project-idx]");
-        if (!card) return;
-        const idx = parseInt(card.getAttribute("data-project-idx"), 10);
-        const project = saved[idx];
-        if (project && project.images && project.images.length > 0) {
-            openLightbox(project.images, 0, project.title);
-        }
-    });
-
-    projectsContainer.addEventListener("keydown", function (e) {
-        if (e.key !== "Enter" && e.key !== " ") return;
-        const card = e.target.closest("[data-project-idx]");
-        if (!card) return;
-        e.preventDefault();
-        const idx = parseInt(card.getAttribute("data-project-idx"), 10);
-        const project = saved[idx];
-        if (project && project.images && project.images.length > 0) {
-            openLightbox(project.images, 0, project.title);
-        }
-    });
+            projectsContainer.addEventListener("keydown", function (e) {
+                if (e.key !== "Enter" && e.key !== " ") return;
+                const card = e.target.closest("[data-project-idx]");
+                if (!card) return;
+                e.preventDefault();
+                const idx = parseInt(card.getAttribute("data-project-idx"), 10);
+                const project = saved[idx];
+                if (project && project.images && project.images.length > 0) {
+                    openLightbox(project.images, 0, project.title);
+                }
+            });
+        })
+        .catch(function (error) {
+            console.error("Error fetching projects:", error);
+            projectsContainer.innerHTML = '<p class="empty-list">Failed to load projects. Please try again later.</p>';
+        });
 }

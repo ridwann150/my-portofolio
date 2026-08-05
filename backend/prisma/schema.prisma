@@ -1,0 +1,19 @@
+// schema.prisma - Definisi struktur database untuk Prisma ORM
+// Prisma menggunakan file ini untuk membuat client dan tabel di PostgreSQL.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Project {
+  id          String   @id @default(uuid()) @db.Uuid
+  title       String
+  description String
+  link        String   @default("")
+  createdAt   DateTime @default(now())
+}
