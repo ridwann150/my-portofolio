@@ -19,7 +19,11 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // CORS middleware digunakan untuk mengizinkan frontend mengakses API dari domain/port yang berbeda
-app.use(cors());
+app.use(cors({
+  origin: 'https://ridwanmaulana.vercel.app', // atau bisa diisi 'https://ridwanmaulana.vercel.app'
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
 
 // Express middleware untuk membaca request body berformat JSON
 app.use(express.json());
