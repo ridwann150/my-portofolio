@@ -7,7 +7,7 @@ require('dotenv/config');
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
-const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
 
 // Prisma Client adalah ORM untuk mengakses PostgreSQL.
 // Prisma 7 membutuhkan driver adapter (PrismaPg) untuk koneksi ke database.
@@ -79,7 +79,7 @@ async function uploadImageToSupabase(file) {
     }
     const ext = MIME_TO_EXT[file.mimetype] || 'bin';
     // Nama file unik agar tidak menimpa file lain di bucket yang sama
-    const fileName = `${uuidv4()}.${ext}`;
+    const fileName = `${crypto.randomUUID()}.${ext}`;
     const filePath = `${fileName}`;
 
     const { data, error } = await supabase.storage
