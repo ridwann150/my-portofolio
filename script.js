@@ -21,7 +21,7 @@ if (hamburgerBtn && navMenu) {
     });
 }
 
-const AUTH_KEY = "portfolio_logged_in";
+const AUTH_KEY = "isLoggedIn";
 const PROJECTS_KEY = "portfolio_projects";
 const PROJECTS_LANG_KEY = "portfolio_projects_lang_v2";
 
@@ -281,47 +281,42 @@ if (fotoProfil) {
 // URL backend yang sudah di-deploy di Vercel (production)
 const API_BASE_URL = "https://my-portofolio-7o3h.vercel.app/api";
 
-const loginForm = document.getElementById("loginForm");
+const loginForm = document.getElementById("login-form");
 if (loginForm) {
     // Jika sudah login, langsung ke halaman kelola project
     if (isLoggedIn()) {
         window.location.href = "project-form.html";
     }
 
-    loginForm.addEventListener("submit", function (e) {
+    loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
-        const username = document.getElementById("username").value.trim();
+        const username = document.getElementById("username").value;
         const password = document.getElementById("password").value;
-        const errorEl = document.getElementById("loginError");
 
-        // Kirim kredensial ke backend untuk diverifikasi
-        fetch(API_BASE_URL + "/login", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                username: username,
-                password: password
-            })
-        })
-            .then(function (res) {
-                return res.json();
-            })
-            .then(function (resData) {
-                if (resData.success) {
-                    // Simpan status login dan token ke localStorage
-                    localStorage.setItem("adminToken", resData.token || "authenticated");
-                    setLoggedIn(true);
-                    window.location.href = "project-form.html";
-                } else {
-                    alert(resData.message || "Incorrect username or password.");
-                }
-            })
-            .catch(function (err) {
-                console.error("Login error:", err);
-                alert("Gagal menghubungi server. Coba lagi nanti.");
+        try {
+            const res = await fetch(API_BASE_URL + "/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password })
             });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                // Simpan status login (dan token jika ada) ke localStorage
+                localStorage.setItem("isLoggedIn", "true");
+                if (data.token) {
+                    localStorage.setItem("adminToken", data.token);
+                }
+                alert("Login Berhasil!");
+                window.location.href = "project-form.html";
+            } else {
+                alert(data.message || "Username atau password salah!");
+            }
+        } catch (err) {
+            console.error("Login error:", err);
+            alert("Gagal menghubungi server. Pastikan backend aktif.");
+        }
     });
 }
 
