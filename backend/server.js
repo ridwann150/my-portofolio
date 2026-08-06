@@ -46,9 +46,11 @@ app.use(cors({
 app.use(express.json());
 
 // Multer: parsing multipart/form-data untuk upload gambar (disimpan di memori).
+// limits.files = batas berapa banyak field file yang diterima (di sini 20 agar
+// tetap aman melebihi kebutuhan 5-10 gambar sekaligus).
 const upload = multer({
     storage: multer.memoryStorage(),
-    limits: { files: 10 }
+    limits: { files: 20 }
 });
 
 // Mapping MIME type ke ekstensi (untuk penamaan file di bucket).
@@ -68,7 +70,25 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const storageBucket = process.env.STORAGE_BUCKET || 'project-images';
 
 let supabase = null;
-if (supabaseUrl && supabaseKey) {
+if (process.env.SUPABASE_MOCK === '1') {
+    // In-memory fake Supabase Storage for local testing (no real credentials needed).
+    const store = new Map();
+    let counter = 0;
+    supabase = {
+        storage: {
+            from: () => ({
+                upload: async (path, buffer) => {
+                    counter++;
+                    store.set(path, buffer);
+                    return { data: { path }, error: null };
+                },
+                getPublicUrl: (path) => ({
+                    data: { publicUrl: `https://mock.example/${encodeURIComponent(path)}` }
+                })
+            })
+        }
+    };
+} else if (supabaseUrl && supabaseKey) {
     supabase = createClient(supabaseUrl, supabaseKey);
 }
 
@@ -101,12 +121,18 @@ async function uploadImageToSupabase(file) {
 }
 
 // Upload banyak file ke Supabase Storage dan kembalikan array URL publik.
+// Setiap file di-upload secara paralel; hanya file yang berhasil masuk array hasil.
 async function uploadFilesToSupabase(files) {
     const list = Array.isArray(files) ? files : (files ? [files] : []);
+    if (list.length === 0) return [];
+
+    const results = await Promise.allSettled(list.map((file) => uploadImageToSupabase(file)));
+
     const urls = [];
-    for (const file of list) {
-        const url = await uploadImageToSupabase(file);
-        if (url) urls.push(url);
+    for (const result of results) {
+        if (result.status === 'fulfilled' && result.value) {
+            urls.push(result.value);
+        }
     }
     return urls;
 }
@@ -217,7 +243,7 @@ app.get('/api/projects/:id', async (req, res) => {
 });
 
 // POST /api/projects - Menambah project baru (multipart/form-data)
-app.post('/api/projects', upload.array('image', 10), async (req, res) => {
+app.post('/api/projects', upload.array('image', 20), async (req, res) => {
     try {
         const { title, description, link } = req.body;
 
@@ -255,7 +281,7 @@ app.post('/api/projects', upload.array('image', 10), async (req, res) => {
 });
 
 // PUT /api/projects/:id - Memperbarui project yang sudah ada (multipart/form-data)
-app.put('/api/projects/:id', upload.array('image', 10), async (req, res) => {
+app.put('/api/projects/:id', upload.array('image', 20), async (req, res) => {
     try {
         const { id } = req.params;
         const { title, description, link } = req.body;
