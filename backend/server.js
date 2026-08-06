@@ -1,21 +1,21 @@
-// server.js - Berkas utama untuk menjalankan server Express.js
+// server.js - Berkas utama untuk menjalankan server Express.js (ES Module)
 // Express digunakan untuk membuat web server dan menangani request HTTP.
 
 // dotenv memuat variabel dari file .env (contoh: DATABASE_URL)
-require('dotenv/config');
+import 'dotenv/config';
 
-const express = require('express');
-const cors = require('cors');
-const multer = require('multer');
-const crypto = require('crypto');
+import express from 'express';
+import cors from 'cors';
+import multer from 'multer';
+import crypto from 'node:crypto';
 
 // Prisma Client adalah ORM untuk mengakses PostgreSQL.
 // Prisma 7 membutuhkan driver adapter (PrismaPg) untuk koneksi ke database.
-const { PrismaClient } = require('@prisma/client');
-const { PrismaPg } = require('@prisma/adapter-pg');
+import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 
 // Supabase client untuk upload gambar ke Storage Bucket
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
@@ -348,4 +348,4 @@ if (process.env.NODE_ENV !== 'production') {
     });
 }
 
-module.exports = app;
+export default app;
