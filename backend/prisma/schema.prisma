@@ -16,5 +16,6 @@ model Project {
   title       String
   description String
   link        String   @default("")
+  images      String[] @default([])
   createdAt   DateTime @default(now())
 }

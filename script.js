@@ -24,7 +24,6 @@ if (hamburgerBtn && navMenu) {
 const AUTH_KEY = "portfolio_logged_in";
 const PROJECTS_KEY = "portfolio_projects";
 const PROJECTS_LANG_KEY = "portfolio_projects_lang_v2";
-const user = { username: "admin", password: "ulatair69@" };
 
 function isLoggedIn() {
     return localStorage.getItem(AUTH_KEY) === "true";
@@ -279,8 +278,12 @@ if (fotoProfil) {
 
 // ─── Login ────────────────────────────────────────────────────────────────────
 
+// URL backend yang sudah di-deploy di Vercel (production)
+const API_BASE_URL = "https://my-portofolio-7o3h.vercel.app/api";
+
 const loginForm = document.getElementById("loginForm");
 if (loginForm) {
+    // Jika sudah login, langsung ke halaman kelola project
     if (isLoggedIn()) {
         window.location.href = "project-form.html";
     }
@@ -291,12 +294,34 @@ if (loginForm) {
         const password = document.getElementById("password").value;
         const errorEl = document.getElementById("loginError");
 
-        if (username === user.username && password === user.password) {
-            setLoggedIn(true);
-            window.location.href = "project-form.html";
-        } else {
-            errorEl.textContent = "Incorrect username or password.";
-        }
+        // Kirim kredensial ke backend untuk diverifikasi
+        fetch(API_BASE_URL + "/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                username: username,
+                password: password
+            })
+        })
+            .then(function (res) {
+                return res.json();
+            })
+            .then(function (resData) {
+                if (resData.success) {
+                    // Simpan status login dan token ke localStorage
+                    localStorage.setItem("adminToken", resData.token || "authenticated");
+                    setLoggedIn(true);
+                    window.location.href = "project-form.html";
+                } else {
+                    alert(resData.message || "Incorrect username or password.");
+                }
+            })
+            .catch(function (err) {
+                console.error("Login error:", err);
+                alert("Gagal menghubungi server. Coba lagi nanti.");
+            });
     });
 }
 
@@ -304,8 +329,10 @@ if (loginForm) {
 
 const projectForm = document.getElementById("projectForm");
 if (projectForm) {
-    if (!isLoggedIn()) {
-        window.location.href = "login.html";
+    // Proteksi halaman: hanya admin yang sudah login boleh mengakses
+    if (!isLoggedIn() && !localStorage.getItem("adminToken")) {
+        alert("Akses ditolak");
+        window.location.href = "index.html";
     }
 
     const imageInput = document.getElementById("projectImage");
@@ -321,6 +348,8 @@ if (projectForm) {
 
     let imageDataArray = [];
     let keepExistingImages = [];
+    // Menyimpan objek File asli untuk dikirim ke backend (Data URL hanya untuk preview)
+    let selectedFiles = [];
 
     function renderPreviewGrid() {
         const all = keepExistingImages.concat(imageDataArray);
@@ -349,6 +378,11 @@ if (projectForm) {
             keepExistingImages.splice(idx, 1);
         } else {
             imageDataArray.splice(idx - totalExisting, 1);
+            // Hapus juga File yang bersesuaian dari selectedFiles
+            const fileIdx = idx - totalExisting;
+            if (fileIdx >= 0 && fileIdx < selectedFiles.length) {
+                selectedFiles.splice(fileIdx, 1);
+            }
         }
         renderPreviewGrid();
     });
@@ -357,6 +391,7 @@ if (projectForm) {
         projectIdInput.value = "";
         imageDataArray = [];
         keepExistingImages = [];
+        selectedFiles = [];
         imageInput.value = "";
         imageInput.required = false;
         imageHint.textContent = "Images are disabled for now.";
@@ -378,6 +413,7 @@ if (projectForm) {
         document.getElementById("projectLink").value = project.link || "";
         keepExistingImages = (project.images || []).slice();
         imageDataArray = [];
+        selectedFiles = [];
         imageInput.value = "";
         imageInput.required = false;
         imageHint.textContent = "Leave empty to keep existing images, or add more.";
@@ -454,6 +490,9 @@ if (projectForm) {
         const files = Array.from(this.files);
         if (files.length === 0) return;
 
+        // Simpan objek File asli untuk nanti dikirim ke backend lewat FormData
+        selectedFiles = selectedFiles.concat(files);
+
         let loaded = 0;
         files.forEach(function (file) {
             const reader = new FileReader();
@@ -482,75 +521,57 @@ if (projectForm) {
             return;
         }
 
-        const finalImages = [];
+        // Bangun FormData (multipart/form-data) — jangan pakai Content-Type agar
+        // browser yang mengatur boundary secara otomatis.
+        const formData = new FormData();
+        formData.append("title", title);
+        formData.append("description", description);
+        formData.append("link", link || "");
 
-        if (editId) {
-            // PUT ke API untuk memperbarui project
-            fetch(`https://my-portofolio-7o3h.vercel.app/api/projects/${editId}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    title: title,
-                    description: description,
-                    link: link || "",
-                    images: finalImages
-                })
+        // Lampirkan setiap file gambar yang dipilih
+        selectedFiles.forEach(function (file) {
+            formData.append("image", file);
+        });
+
+        // Pilih method & URL sesuai mode (tambah = POST, edit = PUT)
+        const isEdit = !!editId;
+        const method = isEdit ? "PUT" : "POST";
+        const url = isEdit
+            ? `https://my-portofolio-7o3h.vercel.app/api/projects/${editId}`
+            : "https://my-portofolio-7o3h.vercel.app/api/projects";
+
+        fetch(url, {
+            method: method,
+            body: formData
+        })
+            .then(function (res) {
+                return res.json();
             })
-            .then(res => res.json())
-            .then(resData => {
+            .then(function (resData) {
                 if (resData.success) {
-                    messageEl.textContent = "Project updated successfully!";
-                    messageEl.className = "form-message success";
-                    resetFormMode();
-                    renderManageList();
-                } else {
-                    messageEl.textContent = resData.message || "Failed to update project.";
-                    messageEl.className = "form-message error";
-                }
-            })
-            .catch(err => {
-                console.error("Error updating project:", err);
-                messageEl.textContent = "Error updating project on server.";
-                messageEl.className = "form-message error";
-            });
-        } else {
-            // POST ke API
-            fetch("https://my-portofolio-7o3h.vercel.app/api/projects", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    title: title,
-                    description: description,
-                    link: link || "",
-                    images: finalImages
-                })
-            })
-            .then(res => res.json())
-            .then(resData => {
-                if (resData.success) {
-                    messageEl.textContent = "Project saved successfully!";
-                    messageEl.className = "form-message success";
+                    alert(resData.success && isEdit
+                        ? "Project updated successfully!"
+                        : "Project saved successfully!");
+                    // Bersihkan state form
+                    projectIdInput.value = "";
                     imageDataArray = [];
                     keepExistingImages = [];
+                    selectedFiles = [];
+                    imageInput.value = "";
                     projectForm.reset();
-                    projectIdInput.value = "";
                     renderPreviewGrid();
-                    renderManageList();
+                    // Kembali ke halaman utama
+                    window.location.href = "index.html";
                 } else {
                     messageEl.textContent = resData.message || "Failed to save project.";
                     messageEl.className = "form-message error";
                 }
             })
-            .catch(err => {
+            .catch(function (err) {
                 console.error("Error saving project:", err);
                 messageEl.textContent = "Error saving project to server.";
                 messageEl.className = "form-message error";
             });
-        }
     });
 
     projectForm.addEventListener("reset", function () {
@@ -558,6 +579,7 @@ if (projectForm) {
         setTimeout(function () {
             imageDataArray = [];
             keepExistingImages = [];
+            selectedFiles = [];
             renderPreviewGrid();
             messageEl.textContent = "";
             messageEl.className = "form-message";
@@ -639,8 +661,10 @@ const logoutBtn = document.getElementById("logoutBtn");
 if (logoutBtn) {
     logoutBtn.addEventListener("click", function (e) {
         e.preventDefault();
+        // Hapus semua data otentikasi dari localStorage
+        localStorage.removeItem("adminToken");
         setLoggedIn(false);
-        window.location.href = "login.html";
+        window.location.href = "index.html";
     });
 }
 
