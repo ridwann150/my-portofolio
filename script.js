@@ -808,3 +808,50 @@ if (projectsContainer && document.getElementById("projects")) {
             projectsContainer.innerHTML = '<p class="empty-list">Failed to load projects. Please try again later.</p>';
         });
 }
+
+// 3D Cube Carousel Logic
+document.addEventListener('DOMContentLoaded', () => {
+    const cube = document.getElementById('cube');
+    const prevBtn = document.getElementById('prevCube');
+    const nextBtn = document.getElementById('nextCube');
+    
+    if (cube && prevBtn && nextBtn) {
+        let currentRotation = 0;
+        
+        function rotateCube(direction) {
+            if (direction === 'next') {
+                currentRotation -= 90;
+            } else {
+                currentRotation += 90;
+            }
+            cube.style.transform = `rotateY(${currentRotation}deg)`;
+        }
+        
+        prevBtn.addEventListener('click', () => rotateCube('prev'));
+        nextBtn.addEventListener('click', () => rotateCube('next'));
+        
+        // Touch events for swipe
+        let touchStartX = 0;
+        let touchEndX = 0;
+        
+        cube.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, {passive: true});
+        
+        cube.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, {passive: true});
+        
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) {
+                // Swipe left
+                rotateCube('next');
+            }
+            if (touchEndX > touchStartX + 50) {
+                // Swipe right
+                rotateCube('prev');
+            }
+        }
+    }
+});
