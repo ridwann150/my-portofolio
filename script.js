@@ -1,5 +1,54 @@
 console.log("Hello Ridwan! JavaScript connected successfully.");
 
+const AUTH_KEY = "isLoggedIn";
+const THEME_KEY = "theme";
+const PROJECTS_KEY = "portfolio_projects";
+const PROJECTS_LANG_KEY = "portfolio_projects_lang_v2";
+
+function isLoggedIn() {
+    return localStorage.getItem(AUTH_KEY) === "true" || !!localStorage.getItem("adminToken");
+}
+
+function setLoggedIn(value) {
+    if (value) {
+        localStorage.setItem(AUTH_KEY, "true");
+    } else {
+        localStorage.removeItem(AUTH_KEY);
+    }
+}
+
+// ─── Theme (Dark / Light) ─────────────────────────────────────────────────────
+
+function getTheme() {
+    return localStorage.getItem(THEME_KEY) === "light" ? "light" : "dark";
+}
+
+function applyTheme(theme) {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem(THEME_KEY, theme);
+    const icon = document.getElementById("themeIcon");
+    if (icon) {
+        icon.className = theme === "light" ? "fa-solid fa-moon" : "fa-solid fa-sun";
+    }
+    const toggle = document.getElementById("themeToggle");
+    if (toggle) {
+        toggle.setAttribute(
+            "aria-label",
+            theme === "light" ? "Switch to dark mode" : "Switch to light mode"
+        );
+        toggle.setAttribute("title", theme === "light" ? "Dark mode" : "Light mode");
+    }
+}
+
+applyTheme(getTheme());
+
+const themeToggle = document.getElementById("themeToggle");
+if (themeToggle) {
+    themeToggle.addEventListener("click", function () {
+        applyTheme(getTheme() === "dark" ? "light" : "dark");
+    });
+}
+
 // ─── Hamburger Menu ───────────────────────────────────────────────────────────
 
 const hamburgerBtn = document.getElementById("hamburgerBtn");
@@ -21,21 +70,20 @@ if (hamburgerBtn && navMenu) {
     });
 }
 
-const AUTH_KEY = "isLoggedIn";
-const PROJECTS_KEY = "portfolio_projects";
-const PROJECTS_LANG_KEY = "portfolio_projects_lang_v2";
+// ─── Admin nav links (Dashboard + Logout) ─────────────────────────────────────
 
-function isLoggedIn() {
-    return localStorage.getItem(AUTH_KEY) === "true";
-}
+(function syncAdminNav() {
+    const dashboardLink = document.getElementById("navDashboard");
+    const logoutLink = document.getElementById("logoutBtn");
+    const loggedIn = isLoggedIn();
 
-function setLoggedIn(value) {
-    if (value) {
-        localStorage.setItem(AUTH_KEY, "true");
-    } else {
-        localStorage.removeItem(AUTH_KEY);
+    if (dashboardLink) {
+        dashboardLink.hidden = !loggedIn;
     }
-}
+    if (logoutLink) {
+        logoutLink.hidden = !loggedIn;
+    }
+})();
 
 const DEFAULT_PROJECTS = [
     {

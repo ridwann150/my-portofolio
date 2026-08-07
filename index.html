@@ -5,6 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ridwan Maulana | Portfolio</title>
+    <script>
+        (function () {
+            var t = localStorage.getItem("theme");
+            document.documentElement.setAttribute("data-theme", t === "light" ? "light" : "dark");
+        })();
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <meta name="google-site-verification" content="jAOiRmRtGloJDUE_bUBIb5kdoNCHxHT412PjYvZt_Jc" />
@@ -14,17 +20,24 @@
 
     <header>
         <nav>
-            <h1>Web Developer</h1>
-            <button class="hamburger" id="hamburgerBtn" aria-label="Toggle menu" aria-expanded="false">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
+            <h1><a href="index.html" class="nav-brand">Web Developer</a></h1>
             <div class="Menu" id="navMenu">
                 <a href="#home">Home</a>
                 <a href="#about">About</a>
                 <a href="#projects">Projects</a>
                 <a href="#contact">Contact</a>
+                <a href="project-form.html" class="nav-admin" id="navDashboard" hidden>Dashboard</a>
+                <a href="#" class="nav-admin" id="logoutBtn" hidden>Logout</a>
+            </div>
+            <div class="nav-actions">
+                <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle dark/light mode" title="Toggle theme">
+                    <i class="fa-solid fa-sun" id="themeIcon"></i>
+                </button>
+                <button class="hamburger" id="hamburgerBtn" aria-label="Toggle menu" aria-expanded="false">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
             </div>
         </nav>
     </header>

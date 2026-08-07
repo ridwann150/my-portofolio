@@ -4,19 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Projects | Ridwan Maulana</title>
+    <script>
+        (function () {
+            var t = localStorage.getItem("theme");
+            document.documentElement.setAttribute("data-theme", t === "light" ? "light" : "dark");
+        })();
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header>
         <nav>
-            <h1>Full Stack Developer</h1>
-            <div class="Menu">
+            <h1><a href="index.html" class="nav-brand">Web Developer</a></h1>
+            <div class="Menu" id="navMenu">
                 <a href="index.html">Home</a>
-                <a href="index.html">About</a>
-                <a href="index.html">Projects</a>
-                <a href="project-form.html">Manage Projects</a>
-                <a href="#" id="logoutBtn">Logout</a>
+                <a href="index.html#about">About</a>
+                <a href="index.html#projects">Projects</a>
+                <a href="index.html#contact">Contact</a>
+                <a href="project-form.html" class="nav-admin" id="navDashboard">Dashboard</a>
+                <a href="#" class="nav-admin" id="logoutBtn">Logout</a>
+            </div>
+            <div class="nav-actions">
+                <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle dark/light mode" title="Toggle theme">
+                    <i class="fa-solid fa-sun" id="themeIcon"></i>
+                </button>
+                <button class="hamburger" id="hamburgerBtn" aria-label="Toggle menu" aria-expanded="false">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
             </div>
         </nav>
     </header>
