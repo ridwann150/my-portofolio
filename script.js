@@ -698,6 +698,360 @@ if (projectForm) {
     renderManageList();
 }
 
+// ─── Manage Tabs (Projects / Experience) ─────────────────────────────────────
+
+const tabProjectsBtn = document.getElementById("tabProjects");
+const tabExperienceBtn = document.getElementById("tabExperience");
+
+if (tabProjectsBtn && tabExperienceBtn) {
+    function switchTab(tabId) {
+        document.querySelectorAll(".manage-tab").forEach(function (t) {
+            t.classList.toggle("active", t.getAttribute("data-tab") === tabId);
+        });
+        document.querySelectorAll(".manage-tab-panel").forEach(function (p) {
+            p.hidden = p.id !== tabId;
+        });
+    }
+    tabProjectsBtn.addEventListener("click", function () {
+        switchTab("projects-tab");
+    });
+    tabExperienceBtn.addEventListener("click", function () {
+        switchTab("experience-tab");
+    });
+}
+
+// ─── Manage Experiences Form ─────────────────────────────────────────────────
+
+const experienceForm = document.getElementById("experienceForm");
+if (experienceForm) {
+    const expImageInput = document.getElementById("experienceImage");
+    const expImagePreview = document.getElementById("expImagePreview");
+    const expIdInput = document.getElementById("experienceId");
+    const expFormHeading = document.getElementById("expFormHeading");
+    const expFormSubtitle = document.getElementById("expFormSubtitle");
+    const expSubmitBtn = document.getElementById("expSubmitBtn");
+    const expCancelEditBtn = document.getElementById("cancelExpEditBtn");
+    const expResetBtn = document.getElementById("expResetBtn");
+    const expMessageEl = document.getElementById("expFormMessage");
+
+    let expImageDataArray = [];
+    let expKeepExistingImages = [];
+    let expSelectedFiles = [];
+
+    function renderExpPreviewGrid() {
+        const all = expKeepExistingImages.concat(expImageDataArray);
+        if (all.length === 0) {
+            expImagePreview.innerHTML = "";
+            return;
+        }
+        expImagePreview.innerHTML = all
+            .map(function (src, i) {
+                return (
+                    '<div class="preview-thumb">' +
+                    '<img src="' + src + '" alt="Preview ' + (i + 1) + '">' +
+                    '<button type="button" class="preview-remove" data-index="' + i + '" aria-label="Remove image">&times;</button>' +
+                    '</div>'
+                );
+            })
+            .join("");
+    }
+
+    expImagePreview.addEventListener("click", function (e) {
+        const btn = e.target.closest(".preview-remove");
+        if (!btn) return;
+        const idx = parseInt(btn.getAttribute("data-index"), 10);
+        const totalExisting = expKeepExistingImages.length;
+        if (idx < totalExisting) {
+            expKeepExistingImages.splice(idx, 1);
+        } else {
+            expImageDataArray.splice(idx - totalExisting, 1);
+            const fileIdx = idx - totalExisting;
+            if (fileIdx >= 0 && fileIdx < expSelectedFiles.length) {
+                expSelectedFiles.splice(fileIdx, 1);
+            }
+        }
+        renderExpPreviewGrid();
+    });
+
+    function resetExpFormMode() {
+        expIdInput.value = "";
+        expImageDataArray = [];
+        expKeepExistingImages = [];
+        expSelectedFiles = [];
+        expImageInput.value = "";
+        expFormHeading.textContent = "ADD EXPERIENCE";
+        expFormSubtitle.textContent = "Fill in the details for a new work experience";
+        expSubmitBtn.textContent = "Save Experience";
+        expCancelEditBtn.hidden = true;
+        expResetBtn.hidden = false;
+        expMessageEl.textContent = "";
+        expMessageEl.className = "form-message";
+        experienceForm.reset();
+        renderExpPreviewGrid();
+    }
+
+    function fillExpFormForEdit(exp) {
+        expIdInput.value = exp.id;
+        document.getElementById("experienceRole").value = exp.role || "";
+        document.getElementById("experienceCompany").value = exp.company || "";
+        document.getElementById("experiencePeriod").value = exp.period || "";
+        document.getElementById("experienceDescription").value = exp.description || "";
+        document.getElementById("experienceSkills").value = (exp.skills || []).join(", ");
+        expKeepExistingImages = (exp.images || []).slice();
+        expImageDataArray = [];
+        expSelectedFiles = [];
+        expImageInput.value = "";
+        renderExpPreviewGrid();
+        expFormHeading.textContent = "EDIT EXPERIENCE";
+        expFormSubtitle.textContent = "Update the selected experience details";
+        expSubmitBtn.textContent = "Update Experience";
+        expCancelEditBtn.hidden = false;
+        expResetBtn.hidden = true;
+        expMessageEl.textContent = "";
+        expMessageEl.className = "form-message";
+        experienceForm.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function renderManageExperiencesList() {
+        const listEl = document.getElementById("manageExperiencesList");
+        if (!listEl) return;
+
+        fetch(API_BASE_URL + "/experiences")
+            .then(res => res.json())
+            .then(result => {
+                const exps = (result.data || []).slice().sort((a, b) => Number(b.id) - Number(a.id));
+                const countEl = document.getElementById("experienceCount");
+                if (countEl) {
+                    countEl.textContent =
+                        exps.length === 0
+                            ? "No experiences yet"
+                            : "Showing " + exps.length + " experience" + (exps.length === 1 ? "" : "s");
+                }
+
+                if (exps.length === 0) {
+                    listEl.innerHTML = '<p class="empty-list">No experiences yet. Add one using the form above.</p>';
+                    return;
+                }
+
+                listEl.innerHTML = exps
+                    .map(function (exp) {
+                        const imgs = exp.images || [];
+                        const skillsHtml = (exp.skills || []).length > 0
+                            ? '<div class="manage-skill-tags">' +
+                              exp.skills.map(function (s) {
+                                  return '<span class="manage-skill-tag">' + escapeHtml(s) + '</span>';
+                              }).join("") +
+                              '</div>'
+                            : "";
+
+                        const thumbsHtml = imgs.length > 0
+                            ? '<div class="manage-thumbs">' +
+                              imgs.map(function (src, i) {
+                                  return '<img src="' + src + '" alt="' + escapeHtml(exp.role) + '" class="clickable-image manage-thumb" data-exp-id="' + exp.id + '" data-img-index="' + i + '" title="Click to view full image">';
+                              }).join("") +
+                              '</div>'
+                            : "";
+
+                        return (
+                            '<div class="manage-card" data-id="' + exp.id + '">' +
+                            thumbsHtml +
+                            '<div class="manage-card-body">' +
+                            '<h3>' + escapeHtml(exp.role) + ' - ' + escapeHtml(exp.company) + '</h3>' +
+                            '<p class="manage-period">' + escapeHtml(exp.period) + '</p>' +
+                            '<p>' + escapeHtml(exp.description) + '</p>' +
+                            skillsHtml +
+                            '<div class="manage-actions">' +
+                            '<button type="button" class="btn-edit" data-exp-edit="' + exp.id + '"><i class="fa-solid fa-pen"></i> Edit</button>' +
+                            '<button type="button" class="btn-delete" data-exp-delete="' + exp.id + '"><i class="fa-solid fa-trash"></i> Delete</button>' +
+                            '</div></div></div>'
+                        );
+                    })
+                    .join("");
+            })
+            .catch(err => {
+                console.error("Error loading manage experiences:", err);
+                listEl.innerHTML = '<p class="empty-list">Failed to load experiences from server.</p>';
+            });
+    }
+
+    expImageInput.addEventListener("change", function () {
+        const files = Array.from(this.files);
+        if (files.length === 0) return;
+
+        expSelectedFiles = expSelectedFiles.concat(files);
+
+        let loaded = 0;
+        files.forEach(function (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                expImageDataArray.push(e.target.result);
+                loaded++;
+                if (loaded === files.length) {
+                    renderExpPreviewGrid();
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+        expImageInput.value = "";
+    });
+
+    experienceForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const role = document.getElementById("experienceRole").value.trim();
+        const company = document.getElementById("experienceCompany").value.trim();
+        const period = document.getElementById("experiencePeriod").value.trim();
+        const description = document.getElementById("experienceDescription").value.trim();
+        const skillsRaw = document.getElementById("experienceSkills").value.trim();
+        const editId = expIdInput.value;
+
+        if (!role || !company || !period || !description) {
+            expMessageEl.textContent = "Role, company, period, and description are required.";
+            expMessageEl.className = "form-message error";
+            return;
+        }
+
+        const skillsArray = skillsRaw
+            ? skillsRaw.split(",").map(function (s) { return s.trim(); }).filter(Boolean)
+            : [];
+
+        const formData = new FormData();
+        formData.append("role", role);
+        formData.append("company", company);
+        formData.append("period", period);
+        formData.append("description", description);
+        formData.append("skills", JSON.stringify(skillsArray));
+
+        expSelectedFiles.forEach(function (file) {
+            formData.append("image", file);
+        });
+
+        const isEdit = !!editId;
+        const method = isEdit ? "PUT" : "POST";
+        const url = isEdit
+            ? API_BASE_URL + "/experiences/" + editId
+            : API_BASE_URL + "/experiences";
+
+        fetch(url, {
+            method: method,
+            body: formData
+        })
+            .then(function (res) {
+                return res.json();
+            })
+            .then(function (resData) {
+                if (resData.success) {
+                    alert(isEdit
+                        ? "Experience updated successfully!"
+                        : "Experience saved successfully!");
+                    expIdInput.value = "";
+                    expImageDataArray = [];
+                    expKeepExistingImages = [];
+                    expSelectedFiles = [];
+                    expImageInput.value = "";
+                    experienceForm.reset();
+                    renderExpPreviewGrid();
+                    renderManageExperiencesList();
+                    resetExpFormMode();
+                } else {
+                    expMessageEl.textContent = resData.message || "Failed to save experience.";
+                    expMessageEl.className = "form-message error";
+                }
+            })
+            .catch(function (err) {
+                console.error("Error saving experience:", err);
+                expMessageEl.textContent = "Error saving experience to server.";
+                expMessageEl.className = "form-message error";
+            });
+    });
+
+    experienceForm.addEventListener("reset", function () {
+        if (expIdInput.value) return;
+        setTimeout(function () {
+            expImageDataArray = [];
+            expKeepExistingImages = [];
+            expSelectedFiles = [];
+            renderExpPreviewGrid();
+            expMessageEl.textContent = "";
+            expMessageEl.className = "form-message";
+        }, 0);
+    });
+
+    expCancelEditBtn.addEventListener("click", function () {
+        resetExpFormMode();
+    });
+
+    document.getElementById("manageExperiencesList").addEventListener("click", function (e) {
+        const thumb = e.target.closest("[data-exp-id][data-img-index]");
+        if (thumb) {
+            const expId = thumb.getAttribute("data-exp-id");
+            const startIdx = parseInt(thumb.getAttribute("data-img-index"), 10);
+            fetch(API_BASE_URL + "/experiences")
+                .then(res => res.json())
+                .then(result => {
+                    const exp = (result.data || []).find(function (x) {
+                        return String(x.id) === String(expId);
+                    });
+                    if (exp && exp.images && exp.images.length > 0) {
+                        openLightbox(exp.images, startIdx, exp.role + " - " + exp.company);
+                    }
+                })
+                .catch(err => {
+                    console.error("Error fetching experience for lightbox:", err);
+                });
+            return;
+        }
+
+        const editBtn = e.target.closest("[data-exp-edit]");
+        const deleteBtn = e.target.closest("[data-exp-delete]");
+
+        if (editBtn) {
+            const id = editBtn.getAttribute("data-exp-edit");
+            fetch(API_BASE_URL + "/experiences")
+                .then(res => res.json())
+                .then(result => {
+                    const exp = (result.data || []).find(function (x) {
+                        return String(x.id) === String(id);
+                    });
+                    if (exp) fillExpFormForEdit(exp);
+                })
+                .catch(err => {
+                    console.error("Error fetching experience for edit:", err);
+                });
+            return;
+        }
+
+        if (deleteBtn) {
+            const id = deleteBtn.getAttribute("data-exp-delete");
+            if (!confirm("Are you sure you want to delete this experience?")) return;
+
+            fetch(API_BASE_URL + "/experiences/" + id, {
+                method: "DELETE"
+            })
+                .then(res => res.json())
+                .then(resData => {
+                    if (resData.success) {
+                        if (String(expIdInput.value) === String(id)) {
+                            resetExpFormMode();
+                        }
+                        renderManageExperiencesList();
+                        expMessageEl.textContent = "Experience deleted successfully.";
+                        expMessageEl.className = "form-message success";
+                    } else {
+                        expMessageEl.textContent = resData.message || "Failed to delete experience.";
+                        expMessageEl.className = "form-message error";
+                    }
+                })
+                .catch(err => {
+                    console.error("Error deleting experience:", err);
+                    expMessageEl.textContent = "Error deleting experience on server.";
+                    expMessageEl.className = "form-message error";
+                });
+        }
+    });
+
+    renderManageExperiencesList();
+}
+
 // ─── Logout ───────────────────────────────────────────────────────────────────
 
 const logoutBtn = document.getElementById("logoutBtn");
@@ -806,6 +1160,69 @@ if (projectsContainer && document.getElementById("projects")) {
         .catch(function (error) {
             console.error("Error fetching projects:", error);
             projectsContainer.innerHTML = '<p class="empty-list">Failed to load projects. Please try again later.</p>';
+        });
+}
+
+// ─── Public Experience Timeline ──────────────────────────────────────────────
+
+const timelineContainer = document.querySelector(".timeline");
+if (timelineContainer && document.getElementById("experience")) {
+    timelineContainer.innerHTML = '<p class="empty-list">Loading experiences...</p>';
+
+    fetch(API_BASE_URL + "/experiences")
+        .then(function (response) {
+            return response.json();
+        })
+        .then(function (result) {
+            const exps = result.data || [];
+            timelineContainer.innerHTML = "";
+
+            if (exps.length === 0) {
+                timelineContainer.innerHTML = '<p class="empty-list">No experiences to display yet.</p>';
+                return;
+            }
+
+            exps.forEach(function (exp, idx) {
+                const skillsHtml = (exp.skills || []).length > 0
+                    ? '<div class="timeline-skills">' +
+                      exp.skills.map(function (s) {
+                          return '<span class="skill-badge">' + escapeHtml(s) + '</span>';
+                      }).join("") +
+                      '</div>'
+                    : "";
+
+                const docsHtml = (exp.images && exp.images.length > 0)
+                    ? '<button type="button" class="timeline-docs-btn" data-exp-idx="' + idx + '"><i class="fa-solid fa-images"></i> Lihat Dokumentasi</button>'
+                    : "";
+
+                const item = document.createElement("div");
+                item.className = "timeline-item";
+                item.innerHTML =
+                    '<div class="timeline-dot"></div>' +
+                    '<div class="timeline-content">' +
+                    '<span class="timeline-period">' + escapeHtml(exp.period) + '</span>' +
+                    '<h3>' + escapeHtml(exp.role) + '</h3>' +
+                    '<h4 class="timeline-company">' + escapeHtml(exp.company) + '</h4>' +
+                    '<p>' + escapeHtml(exp.description) + '</p>' +
+                    skillsHtml +
+                    docsHtml +
+                    '</div>';
+                timelineContainer.appendChild(item);
+            });
+
+            timelineContainer.addEventListener("click", function (e) {
+                const btn = e.target.closest("[data-exp-idx]");
+                if (!btn) return;
+                const idx = parseInt(btn.getAttribute("data-exp-idx"), 10);
+                const exp = exps[idx];
+                if (exp && exp.images && exp.images.length > 0) {
+                    openLightbox(exp.images, 0, exp.role + " - " + exp.company);
+                }
+            });
+        })
+        .catch(function (error) {
+            console.error("Error fetching experiences:", error);
+            timelineContainer.innerHTML = '<p class="empty-list">Failed to load experiences. Please try again later.</p>';
         });
 }
 

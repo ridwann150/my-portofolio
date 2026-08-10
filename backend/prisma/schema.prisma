@@ -19,3 +19,15 @@ model Project {
   images      String[] @default([])
   createdAt   DateTime @default(now())
 }
+
+model Experience {
+  id          String   @id @default(uuid()) @db.Uuid
+  role        String
+  company     String
+  period      String
+  description String
+  skills      String[] @default([])
+  images      String[] @default([])
+  createdAt   DateTime @default(now())
+}
+

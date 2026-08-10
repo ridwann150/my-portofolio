@@ -367,6 +367,170 @@ app.delete('/api/projects/:id', async (req, res) => {
     }
 });
 
+// ================= EXPERIENCES =================
+
+// GET /api/experiences - Mengambil semua pengalaman kerja dari database
+app.get('/api/experiences', async (req, res) => {
+    try {
+        const experiences = await prisma.experience.findMany({
+            orderBy: { createdAt: 'desc' }
+        });
+        res.json({
+            success: true,
+            data: experiences
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch experiences."
+        });
+    }
+});
+
+// POST /api/experiences - Menambah pengalaman kerja baru (multipart/form-data)
+app.post('/api/experiences', upload.array('image', 20), async (req, res) => {
+    try {
+        const { role, company, period, description, skills } = req.body;
+
+        if (!role || !company || !period || !description) {
+            return res.status(400).json({
+                success: false,
+                message: "Role, company, period, and description are required."
+            });
+        }
+
+        const images = await uploadFilesToSupabase(req.files);
+
+        // Skills dikirim sebagai JSON string dari form (contoh: '["HTML","CSS"]')
+        let skillsArray = [];
+        if (skills) {
+            try {
+                skillsArray = JSON.parse(skills);
+            } catch (e) {
+                skillsArray = String(skills).split(',').map(s => s.trim()).filter(Boolean);
+            }
+        }
+
+        const newExperience = await prisma.experience.create({
+            data: {
+                role,
+                company,
+                period,
+                description,
+                skills: skillsArray,
+                images
+            }
+        });
+
+        res.status(201).json({
+            success: true,
+            data: newExperience
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to create experience."
+        });
+    }
+});
+
+// PUT /api/experiences/:id - Memperbarui pengalaman kerja (multipart/form-data)
+app.put('/api/experiences/:id', upload.array('image', 20), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { role, company, period, description, skills } = req.body;
+
+        if (!role || !company || !period || !description) {
+            return res.status(400).json({
+                success: false,
+                message: "Role, company, period, and description are required."
+            });
+        }
+
+        const existing = await prisma.experience.findUnique({
+            where: { id }
+        });
+        if (!existing) {
+            return res.status(404).json({
+                success: false,
+                message: "Experience not found."
+            });
+        }
+
+        let images = await uploadFilesToSupabase(req.files);
+        if (images.length === 0) {
+            images = existing.images || [];
+        }
+
+        let skillsArray = existing.skills || [];
+        if (skills) {
+            try {
+                skillsArray = JSON.parse(skills);
+            } catch (e) {
+                skillsArray = String(skills).split(',').map(s => s.trim()).filter(Boolean);
+            }
+        }
+
+        const updatedExperience = await prisma.experience.update({
+            where: { id },
+            data: {
+                role,
+                company,
+                period,
+                description,
+                skills: skillsArray,
+                images
+            }
+        });
+
+        res.json({
+            success: true,
+            data: updatedExperience
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to update experience."
+        });
+    }
+});
+
+// DELETE /api/experiences/:id - Menghapus pengalaman kerja berdasarkan id
+app.delete('/api/experiences/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const existing = await prisma.experience.findUnique({
+            where: { id }
+        });
+
+        if (!existing) {
+            return res.status(404).json({
+                success: false,
+                message: "Experience not found."
+            });
+        }
+
+        await prisma.experience.delete({
+            where: { id }
+        });
+
+        res.json({
+            success: true,
+            message: "Experience deleted successfully."
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to delete experience."
+        });
+    }
+});
+
 // Di Vercel (production), app diekspor sebagai serverless function — jangan panggil listen
 if (process.env.NODE_ENV !== 'production') {
     app.listen(PORT, () => {

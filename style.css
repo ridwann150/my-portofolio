@@ -21,6 +21,8 @@
     --admin-link: #2a2a2a;
     --admin-link-hover: #555;
     --hamburger: #ffffff;
+    --tl-neon: #00ffff;
+    --tl-glow: rgba(0, 255, 255, 0.55);
     --transition-theme: background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
 }
 
@@ -40,6 +42,8 @@
     --admin-link: #c0c0c0;
     --admin-link-hover: #888;
     --hamburger: #1a1a1a;
+    --tl-neon: #0099aa;
+    --tl-glow: rgba(0, 153, 170, 0.4);
 }
 
 html{scroll-behavior: smooth;}
@@ -419,6 +423,141 @@ footer{
 .projects-card .project-link {
     position: relative;
     z-index: 1;
+}
+
+/* Experience Vertical Neon Timeline */
+#experience {
+    display: block;
+    scroll-margin-top: 90px;
+    margin: 0 auto;
+    padding: 60px 80px 100px 80px;
+}
+
+#experience h2 {
+    font-size: 28px;
+    margin-bottom: 40px;
+    color: var(--text);
+    display: inline-block;
+    padding-bottom: 5px;
+}
+
+.timeline {
+    position: relative;
+    max-width: 860px;
+    margin: 0 auto;
+    padding-left: 44px;
+}
+
+.timeline::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 14px;
+    width: 3px;
+    background: linear-gradient(180deg, var(--tl-neon), transparent 92%);
+    box-shadow: 0 0 12px var(--tl-glow), 0 0 24px var(--tl-glow);
+    border-radius: 3px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 32px;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: -41px;
+    top: 8px;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: var(--tl-neon);
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 8px var(--tl-neon), 0 0 20px var(--tl-glow), 0 0 36px var(--tl-glow);
+}
+
+.timeline-content {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 24px;
+    transition: all 0.3s ease, var(--transition-theme);
+}
+
+.timeline-content:hover {
+    border-color: var(--accent-hover);
+    box-shadow: 0 8px 20px var(--shadow-accent);
+    transform: translateY(-2px);
+}
+
+.timeline-period {
+    display: inline-block;
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--tl-neon);
+    border: 1px solid var(--tl-glow);
+    background: rgba(0, 191, 255, 0.06);
+    padding: 3px 12px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+}
+
+.timeline-content h3 {
+    font-size: 20px;
+    margin-bottom: 2px;
+    color: var(--text);
+}
+
+.timeline-company {
+    font-size: 15px;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+}
+
+.timeline-content p {
+    font-size: 15px;
+    color: var(--text-muted);
+    line-height: 1.65;
+    margin-bottom: 14px;
+}
+
+.timeline-skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.skill-badge {
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--tl-neon);
+    border: 1px solid var(--tl-glow);
+    border-radius: 20px;
+    padding: 4px 12px;
+    background: rgba(0, 191, 255, 0.06);
+}
+
+.timeline-docs-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border: 1px solid var(--tl-neon);
+    border-radius: 30px;
+    background: transparent;
+    color: var(--tl-neon);
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.timeline-docs-btn:hover {
+    background: var(--tl-neon);
+    color: #111;
+    box-shadow: 0 0 14px var(--tl-glow);
 }
 
 /* Full image lightbox / carousel */
@@ -916,6 +1055,72 @@ footer{
     color: #111;
 }
 
+/* Admin manage tabs (Projects / Experience) */
+.manage-tabs {
+    display: flex;
+    gap: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 30px;
+    padding: 6px;
+}
+
+.manage-tab {
+    padding: 10px 22px;
+    border: none;
+    border-radius: 24px;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.manage-tab:hover {
+    color: var(--accent);
+}
+
+.manage-tab.active {
+    background: var(--accent);
+    color: #111;
+}
+
+.manage-tab-panel {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+    align-items: center;
+}
+
+.manage-tab-panel[hidden] {
+    display: none;
+}
+
+.manage-period {
+    color: var(--accent-hover);
+    font-weight: bold;
+    font-size: 13px;
+    margin-bottom: 6px;
+}
+
+.manage-skill-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.manage-skill-tag {
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 20px;
+    padding: 3px 10px;
+}
+
 .hamburger {
     display: none;
     flex-direction: column;
@@ -1072,6 +1277,39 @@ footer{
 
     #projects {
         padding: 60px 20px 80px;
+    }
+
+    #experience {
+        padding: 60px 20px 80px;
+    }
+
+    .timeline {
+        padding-left: 34px;
+    }
+
+    .timeline::before {
+        left: 10px;
+    }
+
+    .timeline-dot {
+        left: -31px;
+        width: 13px;
+        height: 13px;
+    }
+
+    .timeline-content {
+        padding: 18px;
+    }
+
+    .manage-tabs {
+        flex-wrap: wrap;
+        border-radius: 16px;
+    }
+
+    .manage-tab {
+        flex: 1;
+        min-width: 140px;
+        text-align: center;
     }
 
     .projects-row-first,

@@ -39,53 +39,120 @@
     </header>
 
     <main class="manage-page">
-        <div class="auth-card auth-card-wide">
-            <h2 id="formHeading">ADD PROJECT</h2>
-            <p class="auth-subtitle" id="formSubtitle">Fill in the details for a new portfolio project</p>
-
-            <form id="projectForm" enctype="multipart/form-data">
-                <input type="hidden" id="projectId" value="">
-
-                <div class="form-group">
-                    <label for="projectImage">Upload Images <span class="optional-tag">(select multiple)</span></label>
-                    <input type="file" id="projectImage" name="projectImage" accept="image/*" multiple>
-                    <p class="field-hint" id="imageHint">Required when adding a new project. You can select multiple images.</p>
-                    <div id="imagePreview" class="image-preview-grid"></div>
-                </div>
-
-                <div class="form-group">
-                    <label for="projectTitle">Project Title</label>
-                    <input type="text" id="projectTitle" name="projectTitle" placeholder="Example: E-Commerce Website" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="projectDescription">Description</label>
-                    <textarea id="projectDescription" name="projectDescription" rows="5" placeholder="Briefly describe this project..." required></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="projectLink">Project Link <span class="optional-tag">(optional)</span></label>
-                    <input type="url" id="projectLink" name="projectLink" placeholder="https://...">
-                </div>
-
-                <p id="formMessage" class="form-message"></p>
-
-                <div class="form-actions">
-                    <button type="button" class="btn-secondary" id="cancelEditBtn" hidden>Cancel</button>
-                    <button type="reset" class="btn-secondary" id="resetBtn">Reset</button>
-                    <button type="submit" class="btn-primary" id="submitBtn">Save Project</button>
-                </div>
-            </form>
-
-            <a href="index.html" class="auth-back">&larr; View Project List</a>
+        <div class="manage-tabs" role="tablist">
+            <button type="button" class="manage-tab active" id="tabProjects" data-tab="projects-tab" role="tab">Manage Projects</button>
+            <button type="button" class="manage-tab" id="tabExperience" data-tab="experience-tab" role="tab">Manage Experience</button>
         </div>
 
-        <section class="manage-list-section">
-            <h2>PROJECT LIST</h2>
-            <p class="auth-subtitle">Edit or delete all saved projects</p>
-            <p id="projectCount" class="project-count"></p>
-            <div id="manageProjectsList" class="manage-projects-list"></div>
-        </section>
+        <div id="projects-tab" class="manage-tab-panel">
+            <div class="auth-card auth-card-wide">
+                <h2 id="formHeading">ADD PROJECT</h2>
+                <p class="auth-subtitle" id="formSubtitle">Fill in the details for a new portfolio project</p>
+
+                <form id="projectForm" enctype="multipart/form-data">
+                    <input type="hidden" id="projectId" value="">
+
+                    <div class="form-group">
+                        <label for="projectImage">Upload Images <span class="optional-tag">(select multiple)</span></label>
+                        <input type="file" id="projectImage" name="projectImage" accept="image/*" multiple>
+                        <p class="field-hint" id="imageHint">Required when adding a new project. You can select multiple images.</p>
+                        <div id="imagePreview" class="image-preview-grid"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="projectTitle">Project Title</label>
+                        <input type="text" id="projectTitle" name="projectTitle" placeholder="Example: E-Commerce Website" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="projectDescription">Description</label>
+                        <textarea id="projectDescription" name="projectDescription" rows="5" placeholder="Briefly describe this project..." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="projectLink">Project Link <span class="optional-tag">(optional)</span></label>
+                        <input type="url" id="projectLink" name="projectLink" placeholder="https://...">
+                    </div>
+
+                    <p id="formMessage" class="form-message"></p>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" id="cancelEditBtn" hidden>Cancel</button>
+                        <button type="reset" class="btn-secondary" id="resetBtn">Reset</button>
+                        <button type="submit" class="btn-primary" id="submitBtn">Save Project</button>
+                    </div>
+                </form>
+
+                <a href="index.html" class="auth-back">&larr; View Project List</a>
+            </div>
+
+            <section class="manage-list-section">
+                <h2>PROJECT LIST</h2>
+                <p class="auth-subtitle">Edit or delete all saved projects</p>
+                <p id="projectCount" class="project-count"></p>
+                <div id="manageProjectsList" class="manage-projects-list"></div>
+            </section>
+        </div>
+
+        <div id="experience-tab" class="manage-tab-panel" hidden>
+            <div class="auth-card auth-card-wide">
+                <h2 id="expFormHeading">ADD EXPERIENCE</h2>
+                <p class="auth-subtitle" id="expFormSubtitle">Fill in the details for a new work experience</p>
+
+                <form id="experienceForm" enctype="multipart/form-data">
+                    <input type="hidden" id="experienceId" value="">
+
+                    <div class="form-group">
+                        <label for="experienceImage">Upload Documentation Images <span class="optional-tag">(select multiple)</span></label>
+                        <input type="file" id="experienceImage" name="experienceImage" accept="image/*" multiple>
+                        <p class="field-hint" id="expImageHint">Optional. You can select multiple images.</p>
+                        <div id="expImagePreview" class="image-preview-grid"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="experienceRole">Role / Position</label>
+                        <input type="text" id="experienceRole" name="experienceRole" placeholder="Example: Web Developer" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="experienceCompany">Company / Institution</label>
+                        <input type="text" id="experienceCompany" name="experienceCompany" placeholder="Example: PT Maju Bersama" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="experiencePeriod">Period (Year)</label>
+                        <input type="text" id="experiencePeriod" name="experiencePeriod" placeholder="Example: 2023 - 2024" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="experienceDescription">Description</label>
+                        <textarea id="experienceDescription" name="experienceDescription" rows="5" placeholder="Briefly describe your responsibilities..." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="experienceSkills">Tags / Skills <span class="optional-tag">(comma separated)</span></label>
+                        <input type="text" id="experienceSkills" name="experienceSkills" placeholder="Example: HTML, CSS, JavaScript">
+                    </div>
+
+                    <p id="expFormMessage" class="form-message"></p>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" id="cancelExpEditBtn" hidden>Cancel</button>
+                        <button type="reset" class="btn-secondary" id="expResetBtn">Reset</button>
+                        <button type="submit" class="btn-primary" id="expSubmitBtn">Save Experience</button>
+                    </div>
+                </form>
+
+                <a href="index.html" class="auth-back">&larr; View Portfolio</a>
+            </div>
+
+            <section class="manage-list-section">
+                <h2>EXPERIENCE LIST</h2>
+                <p class="auth-subtitle">Edit or delete all saved experiences</p>
+                <p id="experienceCount" class="project-count"></p>
+                <div id="manageExperiencesList" class="manage-projects-list"></div>
+            </section>
+        </div>
     </main>
 
     <div id="imageLightbox" class="image-lightbox" hidden>
