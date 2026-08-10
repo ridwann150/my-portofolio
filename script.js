@@ -1226,6 +1226,19 @@ if (timelineContainer && document.getElementById("experience")) {
         });
 }
 
+// ─── Dragon Mascot Scroll Visibility ────────────────────────────────────────
+
+const dragonWrap = document.getElementById("dragonMascotWrap");
+if (dragonWrap) {
+    function updateDragonVisibility() {
+        const scrollBottom = document.documentElement.scrollHeight - (window.scrollY + window.innerHeight);
+        const nearFooter = scrollBottom < window.innerHeight * 0.35;
+        dragonWrap.classList.toggle("show-on-footer", nearFooter);
+    }
+    window.addEventListener("scroll", updateDragonVisibility, { passive: true });
+    updateDragonVisibility();
+}
+
 // 3D Cube Carousel Logic
 document.addEventListener('DOMContentLoaded', () => {
     const cube = document.getElementById('cube');
