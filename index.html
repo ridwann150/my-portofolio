@@ -149,6 +149,13 @@
         </section>
     </main>
 
+    <div id="dragonMascotWrap">
+        <img id="dragonMascot" src="images/dragon-mascot.png" alt="Dragon mascot"
+            role="button" aria-label="Scroll to top" tabindex="0"
+            onclick="window.scrollTo({top: 0, behavior: 'smooth'})"
+            onerror="this.closest('#dragonMascotWrap').style.display='none'">
+    </div>
+
     <div id="imageLightbox" class="image-lightbox" hidden>
         <button type="button" class="lightbox-close" id="lightboxClose" aria-label="Close">&times;</button>
         <button type="button" class="lightbox-arrow lightbox-prev" id="lightboxPrev"

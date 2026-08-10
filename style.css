@@ -560,6 +560,39 @@ footer{
     box-shadow: 0 0 14px var(--tl-glow);
 }
 
+/* Dragon Mascot */
+#dragonMascotWrap {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 999;
+    pointer-events: auto;
+    width: 90px;
+    animation: floatDragon 3s ease-in-out infinite;
+}
+
+#dragonMascot {
+    display: block;
+    width: 100%;
+    height: auto;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-drag: none;
+    filter: drop-shadow(0 0 12px rgba(0, 255, 255, 0.35));
+    transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+#dragonMascot:hover {
+    transform: scale(1.15) rotate(-5deg);
+    filter: drop-shadow(0 0 18px rgba(0, 255, 255, 0.6));
+}
+
+@keyframes floatDragon {
+    0% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-10px) rotate(3deg); }
+    100% { transform: translateY(0px) rotate(0deg); }
+}
+
 /* Full image lightbox / carousel */
 .image-lightbox {
     position: fixed;
@@ -1310,6 +1343,12 @@ footer{
         flex: 1;
         min-width: 140px;
         text-align: center;
+    }
+
+    #dragonMascotWrap {
+        width: 64px;
+        bottom: 16px;
+        right: 16px;
     }
 
     .projects-row-first,
