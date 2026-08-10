@@ -353,7 +353,7 @@ footer{
 }
 
     .projects-card h3{font-size: 20px; margin-top: 14px;}
-    .projects-card   p{font-size: 16px; color: var(--text-muted); line-height: 1.6;}
+    .projects-card   p{font-size: 16px; color: var(--text-muted); line-height: 1.6; text-align: justify;}
 
     .projects-card a{
         padding: 12px 28px;
@@ -520,6 +520,7 @@ footer{
     color: var(--text-muted);
     line-height: 1.65;
     margin-bottom: 14px;
+    text-align: justify;
 }
 
 .timeline-skills {
