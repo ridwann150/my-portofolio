@@ -14,11 +14,23 @@ import crypto from 'node:crypto';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 
+// Init lazy + proteksi crash: kalau DATABASE_URL belum diset (Vercel), jangan
+// crash saat import module — biarkan null, route balas JSON 500 yang jelas.
+let prisma = null;
+if (process.env.DATABASE_URL) {
+    try {
+        const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+        prisma = new PrismaClient({ adapter });
+        console.log('[Prisma] Client initialized.');
+    } catch (err) {
+        console.error('[Prisma] Init gagal. Route /api/* balas 500 JSON. Detail:', err.message);
+    }
+} else {
+    console.warn('[Prisma] DATABASE_URL belum diset. Route /api/* yang butuh DB akan balas 500 JSON.');
+}
+
 // Supabase client untuk upload gambar ke Storage Bucket
 import { createClient } from '@supabase/supabase-js';
-
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
-const prisma = new PrismaClient({ adapter });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -69,9 +81,10 @@ const MIME_TO_EXT = {
 };
 
 // Inisialisasi client Supabase (untuk upload ke Storage).
-// SUPABASE_URL dan SUPABASE_SERVICE_ROLE_KEY harus disediakan via environment.
+// Baca env dengan fallback aman: utamakan ANON key, fallback SERVICE_ROLE key
+// agar tidak crash bila salah satu env belum di-set di Vercel.
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || null;
 const storageBucket = process.env.STORAGE_BUCKET || 'project-images';
 
 let supabase = null;
@@ -94,22 +107,22 @@ if (process.env.SUPABASE_MOCK === '1') {
             })
         }
     };
-} else if (supabaseUrl && supabaseKey) {
+} else if (supabaseUrl && supabaseAnonKey) {
     const PLACEHOLDER_KEY = 'ganti-dengan-service-role-key-anda';
-    if (supabaseKey === PLACEHOLDER_KEY || supabaseKey.includes('ganti-dengan')) {
-        console.warn('[Supabase] SUPABASE_SERVICE_ROLE_KEY masih placeholder! Upload gambar akan gagal. Set key asli di .env');
+    if (supabaseAnonKey === PLACEHOLDER_KEY || supabaseAnonKey.includes('ganti-dengan')) {
+        console.warn('[Supabase] SUPABASE key masih placeholder! Upload gambar akan gagal. Set key asli di Vercel env.');
     } else {
         console.log(`[Supabase] Client initialized for ${supabaseUrl} (bucket: ${storageBucket})`);
     }
-    supabase = createClient(supabaseUrl, supabaseKey);
+    supabase = createClient(supabaseUrl, supabaseAnonKey);
 } else {
-    console.warn('[Supabase] SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY belum di-set. Upload gambar akan gagal.');
+    console.warn('[Supabase] SUPABASE_URL / SUPABASE_ANON_KEY belum di-set. Upload gambar akan gagal.');
 }
 
 // Upload satu file Buffer ke Supabase Storage, kembalikan URL publiknya.
 async function uploadImageToSupabase(file) {
     if (!supabase) {
-        throw new Error('Supabase client not initialized (set SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY)');
+        throw new Error('Supabase client not initialized (set SUPABASE_URL + SUPABASE_ANON_KEY)');
     }
     const ext = MIME_TO_EXT[file.mimetype] || 'bin';
     // Nama file unik agar tidak menimpa file lain di bucket yang sama
