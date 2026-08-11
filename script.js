@@ -326,9 +326,9 @@ if (fotoProfil) {
 
 // ─── Login ────────────────────────────────────────────────────────────────────
 
-// URL backend yang sudah di-deploy di Vercel (production)
-// Ubah di satu tempat ini jika domain backend berubah.
-const API_BASE_URL = "https://my-portofolio-7o3h.vercel.app/api";
+// URL backend dinamis mengikuti domain aktif saat ini.
+// Endpoint API di server berada di bawah prefix /api (lihat backend/server.js).
+const API_BASE_URL = window.location.origin + "/api";
 
 // Helper fetch: cek res.ok, parse JSON aman, log error jelas ke console.
 async function apiFetchJson(url, options) {
