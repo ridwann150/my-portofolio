@@ -553,6 +553,27 @@ app.delete('/api/experiences/:id', async (req, res) => {
     }
 });
 
+// Catcher request JSON rusak dari express.json (default kirim HTML error).
+app.use((err, req, res, next) => {
+    if (req.path.startsWith('/api/')) {
+        console.error('[api] middleware error:', err.message);
+        return res.status(400).json({
+            success: false,
+            error: err.message || 'Bad request'
+        });
+    }
+    next(err);
+});
+
+// Middleware 404 khusus /api/: semua request /api/* yang tak cocok route
+// mengembalikan JSON, BUKAN HTML index (Vercel fallback atau 404 Express HTML).
+app.use('/api', (req, res) => {
+    res.status(404).json({
+        success: false,
+        error: 'API endpoint not found'
+    });
+});
+
 // Di Vercel (production), app diekspor sebagai serverless function — jangan panggil listen
 if (process.env.NODE_ENV !== 'production') {
     app.listen(PORT, () => {
