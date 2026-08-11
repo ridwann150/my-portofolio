@@ -330,7 +330,7 @@ if (fotoProfil) {
 // Endpoint API di server berada di bawah prefix /api (lihat backend/server.js).
 const API_BASE_URL = window.location.origin + "/api";
 
-// Helper fetch: cek res.ok, parse JSON aman, log error jelas ke console.
+// Helper fetch: cek res.ok, parse JSON aman (tanpa crash JSON.parse), log error jelas.
 async function apiFetchJson(url, options) {
     let res;
     try {
@@ -340,20 +340,33 @@ async function apiFetchJson(url, options) {
         throw err;
     }
 
+    if (!res.ok) {
+        // Baca teks respons asli (bisa HTML error Vercel, bukan JSON).
+        let rawText = "";
+        try {
+            rawText = await res.text();
+        } catch (err) {
+            rawText = "(unreadable response body)";
+        }
+        console.error(
+            "[fetch] API error: status=" + res.status + " url=" + url,
+            rawText
+        );
+        throw new Error("HTTP " + res.status + " " + url + " — " + rawText.slice(0, 200));
+    }
+
     let body = null;
     try {
         body = await res.json();
     } catch (err) {
-        console.error("[fetch] Non-JSON response (status " + res.status + "):", url);
-    }
-
-    if (!res.ok) {
         console.error(
-            "[fetch] API error: status=" + res.status + " url=" + url,
-            body || "(no body)"
+            "[fetch] JSON.parse failed (status " + res.status + "):",
+            url,
+            err
         );
+        throw new Error("Invalid JSON response from " + url);
     }
-    return { ok: res.ok, status: res.status, url: url, data: body };
+    return { ok: true, status: res.status, url: url, data: body };
 }
 
 const loginForm = document.getElementById("login-form");
@@ -503,9 +516,8 @@ if (projectForm) {
         const listEl = document.getElementById("manageProjectsList");
         if (!listEl) return;
 
-        fetch(API_BASE_URL + "/projects")
-            .then(res => res.json())
-            .then(result => {
+        apiFetchJson(API_BASE_URL + "/projects")
+            .then(({ data: result }) => {
                 const projects = (result.data || []).slice().sort((a, b) => Number(b.id) - Number(a.id));
                 const countEl = document.getElementById("projectCount");
                 if (countEl) {
@@ -611,19 +623,11 @@ if (projectForm) {
             ? API_BASE_URL + "/projects/" + editId
             : API_BASE_URL + "/projects";
 
-        fetch(url, {
+        apiFetchJson(url, {
             method: method,
             body: formData
         })
-            .then(function (res) {
-                if (!res.ok) {
-                    return res.json().then(function (errBody) {
-                        throw new Error("HTTP " + res.status + " saving project: " + (errBody.message || "server error"));
-                    });
-                }
-                return res.json();
-            })
-            .then(function (resData) {
+            .then(function ({ data: resData }) {
                 if (resData.success) {
                     alert(resData.success && isEdit
                         ? "Project updated successfully!"
@@ -685,9 +689,8 @@ if (projectForm) {
 
         if (editBtn) {
             const id = editBtn.getAttribute("data-edit");
-            fetch(API_BASE_URL + "/projects")
-                .then(res => res.json())
-                .then(result => {
+            apiFetchJson(API_BASE_URL + "/projects")
+                .then(({ data: result }) => {
                     const project = (result.data || []).find(function (p) {
                         return String(p.id) === String(id);
                     });
@@ -703,11 +706,10 @@ if (projectForm) {
             const id = deleteBtn.getAttribute("data-delete");
             if (!confirm("Are you sure you want to delete this project?")) return;
 
-            fetch(API_BASE_URL + "/projects/" + id, {
+            apiFetchJson(API_BASE_URL + "/projects/" + id, {
                 method: "DELETE"
             })
-            .then(res => res.json())
-            .then(resData => {
+            .then(({ data: resData }) => {
                 if (resData.success) {
                     if (String(projectIdInput.value) === String(id)) {
                         resetFormMode();
@@ -849,9 +851,8 @@ if (experienceForm) {
         const listEl = document.getElementById("manageExperiencesList");
         if (!listEl) return;
 
-        fetch(API_BASE_URL + "/experiences")
-            .then(res => res.json())
-            .then(result => {
+        apiFetchJson(API_BASE_URL + "/experiences")
+            .then(({ data: result }) => {
                 const exps = (result.data || []).slice().sort((a, b) => Number(b.id) - Number(a.id));
                 const countEl = document.getElementById("experienceCount");
                 if (countEl) {
@@ -964,19 +965,11 @@ if (experienceForm) {
             ? API_BASE_URL + "/experiences/" + editId
             : API_BASE_URL + "/experiences";
 
-        fetch(url, {
+        apiFetchJson(url, {
             method: method,
             body: formData
         })
-            .then(function (res) {
-                if (!res.ok) {
-                    return res.json().then(function (errBody) {
-                        throw new Error("HTTP " + res.status + " saving experience: " + (errBody.message || "server error"));
-                    });
-                }
-                return res.json();
-            })
-            .then(function (resData) {
+            .then(function ({ data: resData }) {
                 if (resData.success) {
                     alert(isEdit
                         ? "Experience updated successfully!"
@@ -1023,9 +1016,8 @@ if (experienceForm) {
         if (thumb) {
             const expId = thumb.getAttribute("data-exp-id");
             const startIdx = parseInt(thumb.getAttribute("data-img-index"), 10);
-            fetch(API_BASE_URL + "/experiences")
-                .then(res => res.json())
-                .then(result => {
+            apiFetchJson(API_BASE_URL + "/experiences")
+                .then(({ data: result }) => {
                     const exp = (result.data || []).find(function (x) {
                         return String(x.id) === String(expId);
                     });
@@ -1044,9 +1036,8 @@ if (experienceForm) {
 
         if (editBtn) {
             const id = editBtn.getAttribute("data-exp-edit");
-            fetch(API_BASE_URL + "/experiences")
-                .then(res => res.json())
-                .then(result => {
+            apiFetchJson(API_BASE_URL + "/experiences")
+                .then(({ data: result }) => {
                     const exp = (result.data || []).find(function (x) {
                         return String(x.id) === String(id);
                     });
@@ -1062,11 +1053,10 @@ if (experienceForm) {
             const id = deleteBtn.getAttribute("data-exp-delete");
             if (!confirm("Are you sure you want to delete this experience?")) return;
 
-            fetch(API_BASE_URL + "/experiences/" + id, {
+            apiFetchJson(API_BASE_URL + "/experiences/" + id, {
                 method: "DELETE"
             })
-                .then(res => res.json())
-                .then(resData => {
+                .then(({ data: resData }) => {
                     if (resData.success) {
                         if (String(expIdInput.value) === String(id)) {
                             resetExpFormMode();
@@ -1109,14 +1099,8 @@ const projectsContainer = document.querySelector(".projects-container");
 if (projectsContainer && document.getElementById("projects")) {
     projectsContainer.innerHTML = '<p class="empty-list">Loading projects...</p>';
 
-    fetch(API_BASE_URL + "/projects")
-        .then(function (response) {
-            if (!response.ok) {
-                throw new Error("HTTP " + response.status + " fetching " + API_BASE_URL + "/projects");
-            }
-            return response.json();
-        })
-        .then(function (result) {
+    apiFetchJson(API_BASE_URL + "/projects")
+        .then(function ({ data: result }) {
             const saved = result.data || [];
             projectsContainer.innerHTML = "";
 
@@ -1210,14 +1194,8 @@ const timelineContainer = document.querySelector(".timeline");
 if (timelineContainer && document.getElementById("experience")) {
     timelineContainer.innerHTML = '<p class="empty-list">Loading experiences...</p>';
 
-    fetch(API_BASE_URL + "/experiences")
-        .then(function (response) {
-            if (!response.ok) {
-                throw new Error("HTTP " + response.status + " fetching " + API_BASE_URL + "/experiences");
-            }
-            return response.json();
-        })
-        .then(function (result) {
+    apiFetchJson(API_BASE_URL + "/experiences")
+        .then(function ({ data: result }) {
             const exps = result.data || [];
             timelineContainer.innerHTML = "";
 

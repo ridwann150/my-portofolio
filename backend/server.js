@@ -226,10 +226,11 @@ app.get('/api/projects', async (req, res) => {
             data: projects
         });
     } catch (error) {
-        console.error(error);
+        console.error("[projects] GET /api/projects error:", error);
         res.status(500).json({
             success: false,
-            message: "Failed to fetch projects."
+            message: "Failed to fetch projects.",
+            error: error.message
         });
     }
 });
@@ -400,10 +401,11 @@ app.get('/api/experiences', async (req, res) => {
             data: experiences
         });
     } catch (error) {
-        console.error(error);
+        console.error("[experiences] GET /api/experiences error:", error);
         res.status(500).json({
             success: false,
-            message: "Failed to fetch experiences."
+            message: "Failed to fetch experiences.",
+            error: error.message
         });
     }
 });
