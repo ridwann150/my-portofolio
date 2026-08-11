@@ -37,6 +37,11 @@ app.use(cors({
         if (ALLOWED_ORIGINS.indexOf(origin) !== -1) {
             return callback(null, true);
         }
+        // Fallback: izinkan domain Vercel *.vercel.app agar tidak patah saat
+        // frontend di-deploy ke URL preview/domain baru.
+        const isVercelApp = /\.vercel\.app$/.test(origin);
+        if (isVercelApp) return callback(null, true);
+        console.warn(`[CORS] Blocked origin: ${origin}`);
         return callback(null, false);
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE']
@@ -72,6 +77,7 @@ const storageBucket = process.env.STORAGE_BUCKET || 'project-images';
 let supabase = null;
 if (process.env.SUPABASE_MOCK === '1') {
     // In-memory fake Supabase Storage for local testing (no real credentials needed).
+    console.log('[Supabase] Using MOCK storage (SUPABASE_MOCK=1). Uploads are NOT persisted.');
     const store = new Map();
     let counter = 0;
     supabase = {
@@ -89,7 +95,15 @@ if (process.env.SUPABASE_MOCK === '1') {
         }
     };
 } else if (supabaseUrl && supabaseKey) {
+    const PLACEHOLDER_KEY = 'ganti-dengan-service-role-key-anda';
+    if (supabaseKey === PLACEHOLDER_KEY || supabaseKey.includes('ganti-dengan')) {
+        console.warn('[Supabase] SUPABASE_SERVICE_ROLE_KEY masih placeholder! Upload gambar akan gagal. Set key asli di .env');
+    } else {
+        console.log(`[Supabase] Client initialized for ${supabaseUrl} (bucket: ${storageBucket})`);
+    }
     supabase = createClient(supabaseUrl, supabaseKey);
+} else {
+    console.warn('[Supabase] SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY belum di-set. Upload gambar akan gagal.');
 }
 
 // Upload satu file Buffer ke Supabase Storage, kembalikan URL publiknya.
@@ -110,6 +124,12 @@ async function uploadImageToSupabase(file) {
         });
 
     if (error) {
+        console.error(`[Supabase] Upload gagal: bucket=${storageBucket} path=${filePath}`, {
+            name: error.name,
+            message: error.message,
+            status: error.status,
+            details: error.details
+        });
         throw error;
     }
 

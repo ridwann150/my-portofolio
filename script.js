@@ -327,7 +327,34 @@ if (fotoProfil) {
 // ─── Login ────────────────────────────────────────────────────────────────────
 
 // URL backend yang sudah di-deploy di Vercel (production)
+// Ubah di satu tempat ini jika domain backend berubah.
 const API_BASE_URL = "https://my-portofolio-7o3h.vercel.app/api";
+
+// Helper fetch: cek res.ok, parse JSON aman, log error jelas ke console.
+async function apiFetchJson(url, options) {
+    let res;
+    try {
+        res = await fetch(url, options);
+    } catch (err) {
+        console.error("[fetch] Network error:", url, err);
+        throw err;
+    }
+
+    let body = null;
+    try {
+        body = await res.json();
+    } catch (err) {
+        console.error("[fetch] Non-JSON response (status " + res.status + "):", url);
+    }
+
+    if (!res.ok) {
+        console.error(
+            "[fetch] API error: status=" + res.status + " url=" + url,
+            body || "(no body)"
+        );
+    }
+    return { ok: res.ok, status: res.status, url: url, data: body };
+}
 
 const loginForm = document.getElementById("login-form");
 if (loginForm) {
@@ -359,10 +386,11 @@ if (loginForm) {
                 alert("Login Berhasil!");
                 window.location.href = "project-form.html";
             } else {
+                console.error("[login] Login gagal: HTTP " + res.status, data);
                 alert(data.message || "Username atau password salah!");
             }
         } catch (err) {
-            console.error("Login error:", err);
+            console.error("[login] Network/parse error:", API_BASE_URL + "/login", err);
             alert("Gagal menghubungi server. Pastikan backend aktif.");
         }
     });
@@ -475,7 +503,7 @@ if (projectForm) {
         const listEl = document.getElementById("manageProjectsList");
         if (!listEl) return;
 
-        fetch("https://my-portofolio-7o3h.vercel.app/api/projects")
+        fetch(API_BASE_URL + "/projects")
             .then(res => res.json())
             .then(result => {
                 const projects = (result.data || []).slice().sort((a, b) => Number(b.id) - Number(a.id));
@@ -580,14 +608,19 @@ if (projectForm) {
         const isEdit = !!editId;
         const method = isEdit ? "PUT" : "POST";
         const url = isEdit
-            ? `https://my-portofolio-7o3h.vercel.app/api/projects/${editId}`
-            : "https://my-portofolio-7o3h.vercel.app/api/projects";
+            ? API_BASE_URL + "/projects/" + editId
+            : API_BASE_URL + "/projects";
 
         fetch(url, {
             method: method,
             body: formData
         })
             .then(function (res) {
+                if (!res.ok) {
+                    return res.json().then(function (errBody) {
+                        throw new Error("HTTP " + res.status + " saving project: " + (errBody.message || "server error"));
+                    });
+                }
                 return res.json();
             })
             .then(function (resData) {
@@ -652,7 +685,7 @@ if (projectForm) {
 
         if (editBtn) {
             const id = editBtn.getAttribute("data-edit");
-            fetch("https://my-portofolio-7o3h.vercel.app/api/projects")
+            fetch(API_BASE_URL + "/projects")
                 .then(res => res.json())
                 .then(result => {
                     const project = (result.data || []).find(function (p) {
@@ -670,7 +703,7 @@ if (projectForm) {
             const id = deleteBtn.getAttribute("data-delete");
             if (!confirm("Are you sure you want to delete this project?")) return;
 
-            fetch(`https://my-portofolio-7o3h.vercel.app/api/projects/${id}`, {
+            fetch(API_BASE_URL + "/projects/" + id, {
                 method: "DELETE"
             })
             .then(res => res.json())
@@ -936,6 +969,11 @@ if (experienceForm) {
             body: formData
         })
             .then(function (res) {
+                if (!res.ok) {
+                    return res.json().then(function (errBody) {
+                        throw new Error("HTTP " + res.status + " saving experience: " + (errBody.message || "server error"));
+                    });
+                }
                 return res.json();
             })
             .then(function (resData) {
@@ -1071,8 +1109,11 @@ const projectsContainer = document.querySelector(".projects-container");
 if (projectsContainer && document.getElementById("projects")) {
     projectsContainer.innerHTML = '<p class="empty-list">Loading projects...</p>';
 
-    fetch("https://my-portofolio-7o3h.vercel.app/api/projects")
+    fetch(API_BASE_URL + "/projects")
         .then(function (response) {
+            if (!response.ok) {
+                throw new Error("HTTP " + response.status + " fetching " + API_BASE_URL + "/projects");
+            }
             return response.json();
         })
         .then(function (result) {
@@ -1159,7 +1200,7 @@ if (projectsContainer && document.getElementById("projects")) {
         })
         .catch(function (error) {
             console.error("Error fetching projects:", error);
-            projectsContainer.innerHTML = '<p class="empty-list">Failed to load projects. Please try again later.</p>';
+            projectsContainer.innerHTML = '<p class="empty-list">Failed to load projects (' + (error.message || "network error") + '). Please try again later.</p>';
         });
 }
 
@@ -1171,6 +1212,9 @@ if (timelineContainer && document.getElementById("experience")) {
 
     fetch(API_BASE_URL + "/experiences")
         .then(function (response) {
+            if (!response.ok) {
+                throw new Error("HTTP " + response.status + " fetching " + API_BASE_URL + "/experiences");
+            }
             return response.json();
         })
         .then(function (result) {
@@ -1222,7 +1266,7 @@ if (timelineContainer && document.getElementById("experience")) {
         })
         .catch(function (error) {
             console.error("Error fetching experiences:", error);
-            timelineContainer.innerHTML = '<p class="empty-list">Failed to load experiences. Please try again later.</p>';
+            timelineContainer.innerHTML = '<p class="empty-list">Failed to load experiences (' + (error.message || "network error") + '). Please try again later.</p>';
         });
 }
 
