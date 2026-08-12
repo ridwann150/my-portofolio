@@ -15,11 +15,16 @@ import { PrismaPg } from '@prisma/adapter-pg';
 
 // Init lazy + proteksi crash: kalau DATABASE_URL belum diset (Vercel), jangan
 // crash saat import module — biarkan null, route balas JSON 500 yang jelas.
+// Pakai global caching agar PrismaClient dibuat sekali saja per Lambda instance
+// (mencegah koneksi pool bocor / repeated init di Vercel Serverless).
 let prisma = null;
 if (process.env.DATABASE_URL) {
     try {
         const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
-        prisma = new PrismaClient({ adapter });
+        prisma = global.prisma || new PrismaClient({ adapter });
+        if (process.env.NODE_ENV !== 'production') {
+            global.prisma = prisma;
+        }
         console.log('[Prisma] Client initialized.');
     } catch (err) {
         console.error('[Prisma] Init gagal. Route /api/* balas 500 JSON. Detail:', err.message);
