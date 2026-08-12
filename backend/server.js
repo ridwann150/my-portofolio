@@ -1,14 +1,7 @@
 // server.js - Berkas utama untuk menjalankan server Express.js (ES Module)
 // Express digunakan untuk membuat web server dan menangani request HTTP.
-
-// dotenv hanya diperlukan saat development lokal (membaca .env).
-// Di Vercel, environment variables dibaca otomatis tanpa dotenv.
-// Pakai dynamic import + try-catch agar tidak crash kalau modul tak tersedia.
-try {
-    await import('dotenv/config');
-} catch (e) {
-    console.warn('[dotenv] tidak tersedia — lanjut tanpa load .env (normal di Vercel).');
-}
+// Environment variables dibaca langsung via process.env (tanpa dotenv);
+// di Vercel dibaca otomatis, di lokal pakai .env via node --env-file.
 
 import express from 'express';
 import cors from 'cors';
